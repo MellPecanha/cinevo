@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: cinevo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cinevo
+      POSTGRES_PASSWORD: cinevo
+      POSTGRES_DB: cinevo
+    ports:
+      - "5433:5432"
+    volumes:
+      - cinevo_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  cinevo_postgres_data:
