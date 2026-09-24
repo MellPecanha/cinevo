@@ -1,4 +1,5 @@
 import express from 'express';
+import { movieRoutes } from './routes/movie.routes.js';
 
 export const app = express();
 
@@ -10,3 +11,5 @@ app.get('/health', (_req, res) => {
     service: 'cinevo-api',
   });
 });
+
+app.use(movieRoutes);
