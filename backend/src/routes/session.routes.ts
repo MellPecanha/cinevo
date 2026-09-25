@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import {
+  getSession,
   getSessions,
   postSession,
 } from '../controllers/session.controller.js';
@@ -16,6 +17,11 @@ export const sessionRoutes = Router();
 sessionRoutes.get(
   '/sessions',
   getSessions,
+);
+
+sessionRoutes.get(
+  '/sessions/:id',
+  getSession,
 );
 
 sessionRoutes.post(

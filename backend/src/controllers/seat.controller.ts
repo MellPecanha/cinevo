@@ -5,6 +5,10 @@ import {
   listSeatsByRoom,
 } from '../services/seat.service.js';
 
+import {
+  getSessionSeats,
+} from '../services/seat-availability.service.js';
+
 export async function getSeatsByRoom(
   req: Request,
   res: Response,
@@ -28,4 +32,23 @@ export async function postGenerateSeats(
   );
 
   res.status(201).json(seats);
+}
+
+export async function getSeatsBySession(
+  req: Request,
+  res: Response,
+) {
+  const sessionId = Number(req.params.sessionId);
+
+  const seats = await getSessionSeats(sessionId);
+
+  if (!seats) {
+    res.status(404).json({
+      message: 'Sessão não encontrada',
+    });
+
+    return;
+  }
+
+  res.json(seats);
 }

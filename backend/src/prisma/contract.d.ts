@@ -34,7 +34,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'59d5c0f30f867f7d18575c533397ca204eba2dc3040b2d269c34495809ccf9df'>;
+  StorageHashBase<'4aa4831e8d8292338ec50c9ed57d0110d5fff7305991a29660569729d42c2771'>;
 export type ExecutionHash =
   ExecutionHashBase<'100e17e751b03462bd442944dc00d6c6a95a7e98da33d2ee0c8929467edb3210'>;
 export type ProfileHash =
@@ -292,6 +292,14 @@ export type FieldOutputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
+    readonly SeatHold: {
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly orderId: CodecTypes['pg/int4@1']['output'];
+      readonly sessionId: CodecTypes['pg/int4@1']['output'];
+      readonly seatId: CodecTypes['pg/int4@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
     readonly Session: {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly movieId: CodecTypes['pg/int4@1']['output'];
@@ -375,6 +383,14 @@ export type FieldInputTypes = {
       readonly roomId: CodecTypes['pg/int4@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
+    readonly SeatHold: {
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly orderId: CodecTypes['pg/int4@1']['input'];
+      readonly sessionId: CodecTypes['pg/int4@1']['input'];
+      readonly seatId: CodecTypes['pg/int4@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
     readonly Session: {
       readonly id: CodecTypes['pg/int4@1']['input'];
@@ -460,6 +476,14 @@ export type StorageColumnTypes = {
       readonly type: 'STANDARD' | 'VIP' | 'ACCESSIBLE';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
+    readonly seatHold: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly orderId: CodecTypes['pg/int4@1']['output'];
+      readonly seatId: CodecTypes['pg/int4@1']['output'];
+      readonly sessionId: CodecTypes['pg/int4@1']['output'];
+    };
     readonly session: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly endsAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -543,6 +567,14 @@ export type StorageColumnInputTypes = {
       readonly row: CodecTypes['pg/text@1']['input'];
       readonly type: 'STANDARD' | 'VIP' | 'ACCESSIBLE';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
+    readonly seatHold: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly orderId: CodecTypes['pg/int4@1']['input'];
+      readonly seatId: CodecTypes['pg/int4@1']['input'];
+      readonly sessionId: CodecTypes['pg/int4@1']['input'];
     };
     readonly session: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -631,9 +663,10 @@ export namespace Models {
     roomId: CodecTypes['pg/int4@1']['output'];
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    holds: public_SeatHold[];
     room: public_Room;
     tickets: public_Ticket[];
-    readonly [RelationKeys]?: 'room' | 'tickets';
+    readonly [RelationKeys]?: 'holds' | 'room' | 'tickets';
   };
   export type public_Movie = {
     id: CodecTypes['pg/int4@1']['output'];
@@ -656,10 +689,11 @@ export namespace Models {
     endsAt: CodecTypes['pg/timestamptz-string@1']['output'];
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    holds: public_SeatHold[];
     movie: public_Movie;
     room: public_Room;
     tickets: public_Ticket[];
-    readonly [RelationKeys]?: 'movie' | 'room' | 'tickets';
+    readonly [RelationKeys]?: 'holds' | 'movie' | 'room' | 'tickets';
   };
   export type public_Order = {
     id: CodecTypes['pg/int4@1']['output'];
@@ -668,9 +702,22 @@ export namespace Models {
     total: CodecTypes['pg/numeric@1']['output'];
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    holds: public_SeatHold[];
     tickets: public_Ticket[];
     user: public_User;
-    readonly [RelationKeys]?: 'tickets' | 'user';
+    readonly [RelationKeys]?: 'holds' | 'tickets' | 'user';
+  };
+  export type public_SeatHold = {
+    id: CodecTypes['pg/int4@1']['output'];
+    orderId: CodecTypes['pg/int4@1']['output'];
+    sessionId: CodecTypes['pg/int4@1']['output'];
+    seatId: CodecTypes['pg/int4@1']['output'];
+    expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    order: public_Order;
+    seat: public_Seat;
+    session: public_Session;
+    readonly [RelationKeys]?: 'order' | 'seat' | 'session';
   };
   export type public_Ticket = {
     id: CodecTypes['pg/int4@1']['output'];
@@ -699,6 +746,7 @@ export declare const models: {
     Movie: Models.public_Movie;
     Session: Models.public_Session;
     Order: Models.public_Order;
+    SeatHold: Models.public_SeatHold;
     Ticket: Models.public_Ticket;
   };
 };
@@ -1087,6 +1135,111 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly seatHold: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                };
+                readonly orderId: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly sessionId: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly seatId: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly expiresAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['sessionId', 'seatId'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'seatHold_expiresAt_idx_6b6b8c10';
+                  readonly prefix: 'seatHold_expiresAt_idx';
+                  readonly columns: readonly ['expiresAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'seatHold_orderId_idx_d284871b';
+                  readonly prefix: 'seatHold_orderId_idx';
+                  readonly columns: readonly ['orderId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'seatHold_sessionId_idx_29f415d4';
+                  readonly prefix: 'seatHold_sessionId_idx';
+                  readonly columns: readonly ['sessionId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'seatHold_seatId_idx_3076c3cd';
+                  readonly prefix: 'seatHold_seatId_idx';
+                  readonly columns: readonly ['seatId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'seatHold';
+                    readonly columns: readonly ['orderId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'order';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'seatHold';
+                    readonly columns: readonly ['sessionId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'session';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'seatHold';
+                    readonly columns: readonly ['seatId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'seat';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly session: {
               columns: {
                 readonly id: {
@@ -1407,6 +1560,7 @@ type ContractBase = Omit<
     readonly movie: { readonly namespace: 'public' & NamespaceId; readonly model: 'Movie' };
     readonly session: { readonly namespace: 'public' & NamespaceId; readonly model: 'Session' };
     readonly order: { readonly namespace: 'public' & NamespaceId; readonly model: 'Order' };
+    readonly seatHold: { readonly namespace: 'public' & NamespaceId; readonly model: 'SeatHold' };
     readonly ticket: { readonly namespace: 'public' & NamespaceId; readonly model: 'Ticket' };
   };
   readonly domain: {
@@ -1644,6 +1798,17 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
+              readonly holds: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'SeatHold';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['orderId'];
+                };
+              };
               readonly tickets: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -1795,6 +1960,17 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
+              readonly holds: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'SeatHold';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['seatId'];
+                };
+              };
               readonly room: {
                 readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'Room' };
                 readonly cardinality: 'N:1';
@@ -1827,6 +2003,87 @@ type ContractBase = Omit<
                 readonly roomId: { readonly column: 'roomId' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
+              };
+            };
+          };
+          readonly SeatHold: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly orderId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly sessionId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly seatId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly expiresAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+            };
+            readonly relations: {
+              readonly order: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Order';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['orderId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly seat: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'Seat' };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['seatId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly session: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Session';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['sessionId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'seatHold';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly orderId: { readonly column: 'orderId' };
+                readonly sessionId: { readonly column: 'sessionId' };
+                readonly seatId: { readonly column: 'seatId' };
+                readonly expiresAt: { readonly column: 'expiresAt' };
+                readonly createdAt: { readonly column: 'createdAt' };
               };
             };
           };
@@ -1874,6 +2131,17 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
+              readonly holds: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'SeatHold';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['sessionId'];
+                };
+              };
               readonly movie: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;

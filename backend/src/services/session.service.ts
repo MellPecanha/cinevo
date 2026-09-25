@@ -5,7 +5,20 @@ import type {
 } from '../dtos/session.dto.js';
 
 export async function listSessions() {
-  return db.orm.public.Session.all();
+  return db.orm.public.Session
+    .include('movie')
+    .include('room')
+    .all();
+}
+
+export async function getSessionById(sessionId: number) {
+  return db.orm.public.Session
+    .include('movie')
+    .include('room')
+    .where({
+      id: sessionId,
+    })
+    .first();
 }
 
 export async function createSession(

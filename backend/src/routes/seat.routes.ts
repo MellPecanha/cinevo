@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import {
   getSeatsByRoom,
+  getSeatsBySession,
   postGenerateSeats,
 } from '../controllers/seat.controller.js';
 
@@ -21,4 +22,9 @@ seatRoutes.post(
   '/rooms/:roomId/seats',
   validate(generateSeatsSchema),
   postGenerateSeats,
+);
+
+seatRoutes.get(
+  '/sessions/:sessionId/seats',
+  getSeatsBySession,
 );

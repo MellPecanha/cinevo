@@ -28,6 +28,10 @@
       "model": "Seat",
       "namespace": "public"
     },
+    "seatHold": {
+      "model": "SeatHold",
+      "namespace": "public"
+    },
     "session": {
       "model": "Session",
       "namespace": "public"
@@ -518,6 +522,21 @@
               }
             },
             "relations": {
+              "holds": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "orderId"
+                  ]
+                },
+                "to": {
+                  "model": "SeatHold",
+                  "namespace": "public"
+                }
+              },
               "tickets": {
                 "cardinality": "1:N",
                 "on": {
@@ -758,6 +777,21 @@
               }
             },
             "relations": {
+              "holds": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "seatId"
+                  ]
+                },
+                "to": {
+                  "model": "SeatHold",
+                  "namespace": "public"
+                }
+              },
               "room": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -818,6 +852,126 @@
               "table": "seat"
             }
           },
+          "SeatHold": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "expiresAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "orderId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "seatId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "sessionId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "order": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "orderId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Order",
+                  "namespace": "public"
+                }
+              },
+              "seat": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "seatId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Seat",
+                  "namespace": "public"
+                }
+              },
+              "session": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "sessionId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Session",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "expiresAt": {
+                  "column": "expiresAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "orderId": {
+                  "column": "orderId"
+                },
+                "seatId": {
+                  "column": "seatId"
+                },
+                "sessionId": {
+                  "column": "sessionId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "seatHold"
+            }
+          },
           "Session": {
             "fields": {
               "createdAt": {
@@ -871,6 +1025,21 @@
               }
             },
             "relations": {
+              "holds": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "sessionId"
+                  ]
+                },
+                "to": {
+                  "model": "SeatHold",
+                  "namespace": "public"
+                }
+              },
               "movie": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -1746,6 +1915,145 @@
                 }
               ]
             },
+            "seatHold": {
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "expiresAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "orderId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "seatId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "sessionId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "orderId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "seatHold"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "order"
+                  }
+                },
+                {
+                  "source": {
+                    "columns": [
+                      "sessionId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "seatHold"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "session"
+                  }
+                },
+                {
+                  "source": {
+                    "columns": [
+                      "seatId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "seatHold"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "seat"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "expiresAt"
+                  ],
+                  "name": "seatHold_expiresAt_idx_6b6b8c10",
+                  "prefix": "seatHold_expiresAt_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "orderId"
+                  ],
+                  "name": "seatHold_orderId_idx_d284871b",
+                  "prefix": "seatHold_orderId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "seatId"
+                  ],
+                  "name": "seatHold_seatId_idx_3076c3cd",
+                  "prefix": "seatHold_seatId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "sessionId"
+                  ],
+                  "name": "seatHold_sessionId_idx_29f415d4",
+                  "prefix": "seatHold_sessionId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "sessionId",
+                    "seatId"
+                  ]
+                }
+              ]
+            },
             "session": {
               "columns": {
                 "createdAt": {
@@ -2174,7 +2482,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "59d5c0f30f867f7d18575c533397ca204eba2dc3040b2d269c34495809ccf9df"
+    "storageHash": "4aa4831e8d8292338ec50c9ed57d0110d5fff7305991a29660569729d42c2771"
   },
   "execution": {
     "executionHash": "100e17e751b03462bd442944dc00d6c6a95a7e98da33d2ee0c8929467edb3210",

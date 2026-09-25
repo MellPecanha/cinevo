@@ -105,6 +105,7 @@ model Seat {
   roomId    Int
 
   tickets   Ticket[]
+  holds     SeatHold[]
 
   createdAt TimestamptzString          @default(now())
   updatedAt temporal.updatedAtString()
@@ -140,6 +141,7 @@ model Session {
   endsAt    TimestamptzString
 
   tickets   Ticket[]
+  holds     SeatHold[]
 
   createdAt TimestamptzString          @default(now())
   updatedAt temporal.updatedAtString()
@@ -158,9 +160,30 @@ model Order {
   total     Decimal
 
   tickets   Ticket[]
+  holds     SeatHold[]
 
   createdAt TimestamptzString          @default(now())
   updatedAt temporal.updatedAtString()
+}
+
+model SeatHold {
+  id        Int               @id @default(autoincrement())
+
+  order     Order             @relation(fields:[orderId], references:[id])
+  orderId   Int
+
+  session   Session           @relation(fields:[sessionId], references:[id])
+  sessionId Int
+
+  seat      Seat              @relation(fields:[seatId], references:[id])
+  seatId    Int
+
+  expiresAt TimestamptzString
+
+  createdAt TimestamptzString @default(now())
+
+  @@unique([sessionId, seatId])
+  @@index([expiresAt])
 }
 
 model Ticket {
