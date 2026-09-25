@@ -23,17 +23,43 @@ export async function getSessionSeats(sessionId: number) {
     })
     .all();
 
+  const holds = await db.orm.public.SeatHold
+    .where({
+      sessionId,
+    })
+    .all();
+
+  const now = new Date();
+
   const soldSeatIds = new Set(
     tickets.map((ticket) => ticket.seatId),
   );
 
-  return seats.map((seat) => ({
-    id: seat.id,
-    row: seat.row,
-    number: seat.number,
-    type: seat.type,
-    status: soldSeatIds.has(seat.id)
-      ? 'SOLD'
-      : 'AVAILABLE',
-  }));
+  const heldSeatIds = new Set(
+    holds
+      .filter(
+        (hold) => new Date(hold.expiresAt) > now,
+      )
+      .map((hold) => hold.seatId),
+  );
+
+  return seats.map((seat) => {
+    let status: 'AVAILABLE' | 'HELD' | 'SOLD';
+
+    if (soldSeatIds.has(seat.id)) {
+      status = 'SOLD';
+    } else if (heldSeatIds.has(seat.id)) {
+      status = 'HELD';
+    } else {
+      status = 'AVAILABLE';
+    }
+
+    return {
+      id: seat.id,
+      row: seat.row,
+      number: seat.number,
+      type: seat.type,
+      status,
+    };
+  });
 }
