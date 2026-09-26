@@ -12,6 +12,9 @@ import {
 import {
   cancelOrder,
 } from '../services/cancellation.service.js';
+import {
+  getTicketQrCode,
+} from '../services/qr-code.service.js';
 
 export async function postOrder(
   req: Request,
@@ -117,6 +120,45 @@ export async function getTickets(
   const tickets = await listTicketsByUser(req.user.sub);
 
   res.json(tickets);
+}
+
+export async function getTicketQrCodeImage(
+  req: Request,
+  res: Response,
+) {
+  if (!req.user) {
+    res.status(401).json({
+      message: 'Usuário não autenticado',
+    });
+    return;
+  }
+
+  const ticketCode = req.params.code;
+
+  if (typeof ticketCode !== 'string' || ticketCode.length === 0) {
+    res.status(400).json({
+      message: 'Código do ingresso inválido',
+    });
+    return;
+  }
+
+  try {
+    const qrCode = await getTicketQrCode(
+      req.user.sub,
+      ticketCode,
+    );
+
+    res.json(qrCode);
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : 'Não foi possível gerar o QR Code';
+
+    res.status(404).json({
+      message,
+    });
+  }
 }
 
 export async function postPayOrder(

@@ -148,7 +148,7 @@ export async function createOrder(
 
   const soldSeatIds = new Set(
     tickets
-      .filter((ticket) => ticket.status === 'ACTIVE')
+      .filter((ticket) => ticket.status !== 'CANCELLED')
       .map((ticket) => ticket.seatId),
   );
 
@@ -223,6 +223,9 @@ export async function createOrder(
 
     await tx.orm.public.SeatHold.createAll(seatHolds);
 
-    return order;
+    return {
+      ...order,
+      expiresAt,
+    };
   });
 }

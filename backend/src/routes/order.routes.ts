@@ -5,6 +5,7 @@ import { authenticate } from '../middlewares/authenticate.js';
 import {
   getOrder,
   getOrders,
+  getTicketQrCodeImage,
   getTickets,
   postCancelOrder,
   postOrder,
@@ -30,6 +31,12 @@ orderRoutes.get(
   '/tickets',
   authenticate,
   getTickets,
+);
+
+orderRoutes.get(
+  '/tickets/:code/qrcode',
+  authenticate,
+  getTicketQrCodeImage,
 );
 
 orderRoutes.post(

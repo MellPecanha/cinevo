@@ -83,7 +83,7 @@ export async function payOrder(
 
     const soldSeatIds = new Set(
       soldTickets
-        .filter((ticket) => ticket.status === 'ACTIVE')
+        .filter((ticket) => ticket.status !== 'CANCELLED')
         .map((ticket) => ticket.seatId),
     );
 
