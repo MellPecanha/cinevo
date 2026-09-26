@@ -1,0 +1,232 @@
+openapi: 3.1.0
+info:
+  title: Cinevo API
+  version: 1.0.0
+  description: API para catálogo, reservas, ingressos e administração de cinemas.
+servers:
+  - url: http://localhost:3333
+paths:
+  /health:
+    get:
+      summary: Verifica a disponibilidade da API
+      responses:
+        '200':
+          description: API disponível
+  /movies:
+    get:
+      summary: Lista filmes do catálogo público
+      responses:
+        '200':
+          description: Filmes cadastrados
+    post:
+      summary: Cadastra um filme
+      security: [{ bearerAuth: [] }]
+      responses:
+        '201': { description: Filme criado }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /cinemas:
+    get:
+      summary: Lista cinemas públicos
+      responses:
+        '200': { description: Cinemas cadastrados }
+    post:
+      summary: Cadastra um cinema
+      security: [{ bearerAuth: [] }]
+      responses:
+        '201': { description: Cinema criado }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /sessions:
+    get:
+      summary: Lista sessões públicas
+      responses:
+        '200': { description: Sessões com filme e sala }
+    post:
+      summary: Cria uma sessão
+      security: [{ bearerAuth: [] }]
+      responses:
+        '201': { description: Sessão criada }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /sessions/{sessionId}/seats:
+    get:
+      summary: Exibe o mapa de assentos disponível para uma sessão
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200': { description: Assentos com status AVAILABLE, HELD ou SOLD }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /users:
+    post:
+      summary: Cria uma conta de cliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        '201': { description: Usuário criado }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { description: E-mail já cadastrado }
+  /auth/login:
+    post:
+      summary: Autentica uma pessoa e retorna JWT de uma hora
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+      responses:
+        '200': { description: Token e usuário seguro }
+        '401': { description: Credenciais inválidas }
+  /auth/me:
+    get:
+      summary: Retorna o perfil do usuário autenticado
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Perfil seguro }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /orders:
+    get:
+      summary: Lista pedidos do cliente autenticado
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Pedidos e seus ingressos }
+    post:
+      summary: Cria uma reserva temporária de assentos por dez minutos
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrder'
+      responses:
+        '201':
+          description: Pedido pendente criado, com a data de expiração da reserva
+        '400': { description: Assentos indisponíveis ou dados inválidos }
+  /orders/{orderId}/pay:
+    post:
+      summary: Confirma o pagamento simulado e emite ingressos
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200': { description: Pedido pago e ingressos emitidos }
+        '400': { description: Reserva expirada ou pagamento inválido }
+  /orders/{orderId}/cancel:
+    post:
+      summary: Cancela um pedido até duas horas antes da sessão
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200': { description: Pedido cancelado }
+        '400': { description: Cancelamento não permitido }
+  /tickets:
+    get:
+      summary: Lista os ingressos do cliente autenticado
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Ingressos com sessão, sala, cinema e assento }
+  /tickets/{code}/qrcode:
+    get:
+      summary: Gera o QR Code de um ingresso ativo do proprietário
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: QR Code em data URL }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /favorites:
+    get:
+      summary: Lista filmes favoritos do cliente autenticado
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Favoritos do usuário }
+  /favorites/{movieId}:
+    post:
+      summary: Adiciona um filme aos favoritos
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/MovieId'
+      responses:
+        '201': { description: Favorito criado }
+    delete:
+      summary: Remove um filme dos favoritos
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/MovieId'
+      responses:
+        '204': { description: Favorito removido }
+  /admin/dashboard:
+    get:
+      summary: Retorna métricas administrativas da plataforma
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Métricas de catálogo, vendas e ingressos }
+        '403': { $ref: '#/components/responses/Forbidden' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    MovieId:
+      name: movieId
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+  responses:
+    Unauthorized:
+      description: Token ausente, inválido ou expirado
+    Forbidden:
+      description: Papel sem permissão para esta operação
+    NotFound:
+      description: Recurso não encontrado
+    ValidationError:
+      description: Dados de entrada inválidos
+  schemas:
+    Login:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 1 }
+    UserRegistration:
+      type: object
+      required: [name, email, password]
+      properties:
+        name: { type: string, minLength: 2 }
+        email: { type: string, format: email }
+        phone: { type: string }
+        password: { type: string, minLength: 8 }
+    CreateOrder:
+      type: object
+      required: [sessionId, tickets]
+      properties:
+        sessionId: { type: integer, minimum: 1 }
+        tickets:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            type: object
+            required: [seatId, type]
+            properties:
+              seatId: { type: integer, minimum: 1 }
+              type: { type: string, enum: [FULL, HALF] }
