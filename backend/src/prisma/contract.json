@@ -882,6 +882,13 @@
                   "kind": "scalar"
                 }
               },
+              "price": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar"
+                }
+              },
               "seatId": {
                 "nullable": false,
                 "type": {
@@ -894,6 +901,19 @@
                 "type": {
                   "codecId": "pg/int4@1",
                   "kind": "scalar"
+                }
+              },
+              "type": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "TicketType",
+                  "namespaceId": "public",
+                  "plane": "domain"
                 }
               }
             },
@@ -961,11 +981,17 @@
                 "orderId": {
                   "column": "orderId"
                 },
+                "price": {
+                  "column": "price"
+                },
                 "seatId": {
                   "column": "seatId"
                 },
                 "sessionId": {
                   "column": "sessionId"
+                },
+                "type": {
+                  "column": "type"
                 }
               },
               "namespaceId": "public",
@@ -999,6 +1025,13 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "price": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
                   "kind": "scalar"
                 }
               },
@@ -1101,6 +1134,9 @@
                 },
                 "movieId": {
                   "column": "movieId"
+                },
+                "price": {
+                  "column": "price"
                 },
                 "roomId": {
                   "column": "roomId"
@@ -1916,6 +1952,13 @@
               ]
             },
             "seatHold": {
+              "checks": [
+                {
+                  "expression": "\"type\" IN ('FULL', 'HALF')",
+                  "name": "seatHold_type_check_5900ef46",
+                  "prefix": "seatHold_type_check"
+                }
+              ],
               "columns": {
                 "createdAt": {
                   "codecId": "pg/timestamptz-string@1",
@@ -1945,6 +1988,15 @@
                   "nativeType": "int4",
                   "nullable": false
                 },
+                "price": {
+                  "codecId": "pg/numeric@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "0"
+                  },
+                  "nativeType": "numeric",
+                  "nullable": false
+                },
                 "seatId": {
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
@@ -1954,6 +2006,21 @@
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
                   "nullable": false
+                },
+                "type": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "FULL"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "TicketType",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
                 }
               },
               "foreignKeys": [
@@ -2082,6 +2149,15 @@
                 "movieId": {
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
+                  "nullable": false
+                },
+                "price": {
+                  "codecId": "pg/numeric@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "0"
+                  },
+                  "nativeType": "numeric",
                   "nullable": false
                 },
                 "roomId": {
@@ -2482,7 +2558,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "4aa4831e8d8292338ec50c9ed57d0110d5fff7305991a29660569729d42c2771"
+    "storageHash": "2d7317a1130ee26e384536b5d93b2632f30b60a7315755ee83cdcbfa93ce32dd"
   },
   "execution": {
     "executionHash": "100e17e751b03462bd442944dc00d6c6a95a7e98da33d2ee0c8929467edb3210",

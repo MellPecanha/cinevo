@@ -139,6 +139,7 @@ model Session {
 
   startsAt  TimestamptzString
   endsAt    TimestamptzString
+  price     Decimal                    @default("0")
 
   tickets   Ticket[]
   holds     SeatHold[]
@@ -177,6 +178,9 @@ model SeatHold {
 
   seat      Seat              @relation(fields:[seatId], references:[id])
   seatId    Int
+
+  type      TicketType        @default(FULL)
+  price     Decimal           @default("0")
 
   expiresAt TimestamptzString
 

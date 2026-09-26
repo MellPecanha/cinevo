@@ -54,5 +54,6 @@ export async function createSession(
     roomId: data.roomId,
     startsAt: data.startsAt,
     endsAt: data.endsAt,
+    price: data.price.toFixed(2),
   });
 }

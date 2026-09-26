@@ -22,6 +22,12 @@ export const createSessionSchema = z.object({
     .datetime({
       offset: true,
     }),
+
+  price: z
+    .number()
+    .positive('O preço da sessão deve ser maior que zero')
+    .max(10000, 'O preço da sessão é inválido')
+    .multipleOf(0.01, 'O preço deve ter no máximo duas casas decimais'),
 });
 
 export type CreateSessionInput =

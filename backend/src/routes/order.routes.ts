@@ -1,15 +1,12 @@
 import { Router } from 'express';
 
-import {
-  postOrder,
-} from '../controllers/order.controller.js';
-
 import { validate } from '../middlewares/validate.js';
 import { authenticate } from '../middlewares/authenticate.js';
-
 import {
-  createOrderSchema,
-} from '../schemas/order.schema.js';
+  postOrder,
+  postPayOrder,
+} from '../controllers/order.controller.js';
+import { createOrderSchema } from '../schemas/order.schema.js';
 
 export const orderRoutes = Router();
 
@@ -18,4 +15,10 @@ orderRoutes.post(
   authenticate,
   validate(createOrderSchema),
   postOrder,
+);
+
+orderRoutes.post(
+  '/orders/:id/pay',
+  authenticate,
+  postPayOrder,
 );

@@ -4,12 +4,39 @@ import type {
   CreateOrderDTO,
 } from '../dtos/order.dto.js';
 
-const TICKET_PRICES = {
-  FULL: 40,
-  HALF: 20,
-} as const;
+type TicketType = 'FULL' | 'HALF';
 
 const HOLD_DURATION_MINUTES = 10;
+
+function moneyToCents(value: unknown) {
+  const normalized = String(value);
+
+  if (!/^\d+(\.\d{1,2})?$/.test(normalized)) {
+    throw new Error('O preço da sessão é inválido');
+  }
+
+  const [whole, fraction = ''] = normalized.split('.');
+
+  return BigInt(whole) * 100n + BigInt(fraction.padEnd(2, '0'));
+}
+
+function centsToMoney(cents: bigint) {
+  const whole = cents / 100n;
+  const fraction = (cents % 100n).toString().padStart(2, '0');
+
+  return `${whole}.${fraction}`;
+}
+
+function ticketPriceInCents(
+  sessionPriceInCents: bigint,
+  type: TicketType,
+) {
+  if (type === 'HALF') {
+    return (sessionPriceInCents + 1n) / 2n;
+  }
+
+  return sessionPriceInCents;
+}
 
 export async function createOrder(
   userId: number,
@@ -23,6 +50,14 @@ export async function createOrder(
 
   if (!session) {
     throw new Error('Sessão não encontrada');
+  }
+
+  const selectedSeatIds = data.tickets.map(
+    (ticket) => ticket.seatId,
+  );
+
+  if (new Set(selectedSeatIds).size !== selectedSeatIds.length) {
+    throw new Error('Não é permitido selecionar o mesmo assento mais de uma vez');
   }
 
   const seats = await db.orm.public.Seat
@@ -40,7 +75,7 @@ export async function createOrder(
 
     if (!seat) {
       throw new Error(
-        `Assento ${ticket.seatId} não pertence à sala da sessão`,
+        `O assento ${ticket.seatId} não pertence à sala da sessão`,
       );
     }
   }
@@ -85,12 +120,31 @@ export async function createOrder(
     }
   }
 
-  const total = data.tickets.reduce(
-    (sum, ticket) => {
-      return sum + TICKET_PRICES[ticket.type];
-    },
-    0,
-  ).toFixed(2);
+  const sessionPriceInCents = moneyToCents(session.price);
+
+  if (sessionPriceInCents <= 0n) {
+    throw new Error('A sessão não possui um preço válido');
+  }
+
+  const heldTickets = data.tickets.map((ticket) => {
+    const priceInCents = ticketPriceInCents(
+      sessionPriceInCents,
+      ticket.type,
+    );
+
+    return {
+      ...ticket,
+      price: centsToMoney(priceInCents),
+      priceInCents,
+    };
+  });
+
+  const total = centsToMoney(
+    heldTickets.reduce(
+      (sum, ticket) => sum + ticket.priceInCents,
+      0n,
+    ),
+  );
 
   const expiresAt = new Date(
     now.getTime() +
@@ -104,14 +158,16 @@ export async function createOrder(
       total,
     });
 
-    const holds = data.tickets.map((ticket) => ({
+    const seatHolds = heldTickets.map((ticket) => ({
       orderId: order.id,
       sessionId: data.sessionId,
       seatId: ticket.seatId,
+      type: ticket.type,
+      price: ticket.price,
       expiresAt,
     }));
 
-    await tx.orm.public.SeatHold.createAll(holds);
+    await tx.orm.public.SeatHold.createAll(seatHolds);
 
     return order;
   });
