@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { app } from './app.js';
 import { expireSeatHolds } from './services/seat-hold.service.js';
 
-const PORT = 3334;
+const PORT = Number(process.env.PORT ?? 3333);
 const HOLD_EXPIRATION_INTERVAL_MS = 60 * 1000;
 
 function runSeatHoldExpiration() {

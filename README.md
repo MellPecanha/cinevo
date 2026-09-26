@@ -1,510 +1,242 @@
-# 🎬 Cinevo [Em desenvolvimento]
+# Cinevo
 
-Plataforma full stack para gestão de cinemas e venda de ingressos online.
+Plataforma full stack para venda e gestão de ingressos de cinema. O projeto foi construído para demonstrar regras de negócio que vão além de um CRUD, principalmente concorrência na venda de assentos, reserva temporária, autorização por papel e ciclo de vida do ingresso.
 
-O Cinevo permite que clientes descubram filmes, consultem sessões, escolham seus assentos e realizem compras de ingressos digitais. Para os cinemas, a plataforma oferece recursos para gerenciamento de filmes, salas, assentos, sessões, vendas e operação do cinema.
+## Destaques técnicos
 
----
+- Assentos são físicos, mas a disponibilidade pertence à combinação `Session + Seat`.
+- Um `SeatHold` reserva o assento por 10 minutos durante o checkout.
+- O banco impede dois holds simultâneos para o mesmo assento e sessão.
+- Tickets ativos ou utilizados têm um índice único parcial por sessão e assento. Tickets cancelados ficam no histórico e liberam o assento para revenda.
+- Pagamento simulado cria tickets, remove holds e atualiza o pedido em uma transação.
+- O preço do ticket é uma fotografia do valor praticado: vem de `Session.price`, é salvo no hold e depois no ticket.
+- QR Code usa o código único do ticket. A primeira validação transforma o ticket em `USED`; leituras posteriores são rejeitadas.
 
-## ✨ Sobre o projeto
+## Stack
 
-O Cinevo foi desenvolvido com foco em representar os principais desafios de um sistema real de venda de ingressos, indo além de um CRUD tradicional.
+- Node.js 24, TypeScript e Express
+- PostgreSQL 17 em Docker
+- Prisma ORM 8 (`@prisma/orm-postgres`)
+- Zod, bcrypt, jsonwebtoken e qrcode
+- Vitest e Supertest para testes de integração
+- React, TypeScript e Vite no frontend
 
-A aplicação trabalha com conceitos como:
+## Arquitetura
 
-- controle de disponibilidade de assentos por sessão;
-- prevenção de venda duplicada;
-- reserva temporária de assentos;
-- controle de pedidos e ingressos;
-- diferentes perfis de acesso;
-- gerenciamento de cinemas, salas e sessões;
-- regras de cancelamento;
-- emissão de ingressos digitais;
-- geração de QR Code;
-- validações de dados;
-- controle de concorrência;
-- persistência relacional com PostgreSQL.
+```text
+HTTP request
+  → routes
+  → authentication / authorization / validation middlewares
+  → controllers
+  → services (regras de negócio)
+  → Prisma ORM 8
+  → PostgreSQL
+```
 
-O projeto possui uma arquitetura separando responsabilidades entre API, regras de negócio, persistência e interface.
+O contrato do banco está em [`backend/src/prisma/contract.prisma`](backend/src/prisma/contract.prisma). Os arquivos `contract.json` e `contract.d.ts` são gerados, nunca editados manualmente.
 
----
+## Fluxo de compra
 
-## 🚀 Principais funcionalidades
-
-### 🎥 Catálogo de filmes
-
-- Cadastro de filmes;
-- Título;
-- Sinopse;
-- Duração;
-- Classificação indicativa;
-- Capa;
-- Trailer;
-- Consulta de filmes;
-- Consulta de detalhes;
-- Edição e remoção.
-
-### 🏢 Gestão de cinemas
-
-- Cadastro de cinemas;
-- Endereço;
-- Cidade e estado;
-- Administradores associados;
-- Gerenciamento das salas.
-
-### 🎟️ Gestão de salas
-
-- Cadastro de salas;
-- Identificação por número;
-- Salas padrão e VIP;
-- Configuração da capacidade;
-- Geração dos assentos;
-- Assentos padrão, VIP e acessíveis.
-
-### 🪑 Gestão de assentos
-
-- Configuração da planta da sala;
-- Geração automática dos assentos;
-- Identificação por fileira e número;
-- Assentos acessíveis;
-- Disponibilidade controlada por sessão.
-
-A disponibilidade não pertence ao assento físico.
-
-Um mesmo assento pode estar disponível em uma sessão e vendido em outra.
-
-### 🕐 Gestão de sessões
-
-- Associação entre filme e sala;
-- Data e horário de início;
-- Data e horário de término;
-- Consulta de sessões;
-- Prevenção de conflitos de horário na mesma sala.
-
-Exemplo:
-
-Sala 1
-
-18:00 ───────── 20:00
-20:00 ───────── 22:00
-é permitido.
-Já:
-Sala 1
-
-18:00 ───────── 20:00
-19:30 ───────── 21:30
-é bloqueado.
-
-### 💺 Seleção de assentos
-Durante a compra, o cliente visualiza os assentos disponíveis para uma sessão específica.
-Estados considerados:
-- disponível;
-- reservado temporariamente;
-- vendido.
-A disponibilidade é determinada pela relação entre sessão, assento e ingressos/reservas.
-
-### 🛒 Pedidos
-- Criação de pedido;
-- Seleção de ingressos;
-- Cálculo do valor total;
-- Controle de status;
-- Histórico de pedidos;
-- Cancelamento conforme as regras da plataforma.
-Status:
-PENDING
-PAID
-CANCELLED
-EXPIRED
-
-### 🎫 Ingressos
-Cada ingresso possui:
-- sessão;
-- assento;
-- tipo;
-- preço;
-- código único;
-- pedido associado.
-Tipos:
-- inteira;
-- meia-entrada.
-
-### 📱 Ingresso digital
-Após a confirmação da compra:
-- ingresso digital;
-- código único;
-- QR Code;
-- informações da sessão;
-- filme;
-- cinema;
-- sala;
-- assento.
-
-### 👤 Autenticação e autorização
-A plataforma possui diferentes perfis:
-Customer
-Pode:
-- navegar pelos filmes;
-- consultar sessões;
-- selecionar assentos;
-- comprar ingressos;
-- visualizar pedidos;
-- acessar ingressos;
-- cancelar compras dentro das regras.
-Cinema Admin
-Pode:
-- gerenciar seu cinema;
-- gerenciar salas;
-- configurar assentos;
-- gerenciar sessões;
-- consultar vendas.
-Platform Admin
-Possui acesso administrativo à plataforma.
-
-### 🧠 Regras de negócio
-O Cinevo possui regras para representar situações comuns de uma operação real de cinema.
-Disponibilidade de assentos
-Um assento físico pertence a uma sala:
-Sala 1
- └── A01
-Porém sua disponibilidade pertence à sessão:
-Sessão 1 → A01 vendido
-Sessão 2 → A01 disponível
-Sessão 3 → A01 vendido
-Por isso não existe um campo available diretamente em Seat.
-Prevenção de venda duplicada
-O banco possui uma restrição para impedir que o mesmo assento seja associado duas vezes à mesma sessão:
-(sessionId, seatId)
-Isso cria uma segunda camada de proteção além da regra implementada na aplicação.
-Reserva temporária
-Durante o processo de compra, os assentos podem ficar temporariamente reservados.
-Fluxo:
+```text
 AVAILABLE
-    ↓
-HELD
-    ↓
-PAID
-Caso o pagamento não seja concluído:
-HELD
-  ↓
-EXPIRED
-  ↓
-AVAILABLE
-Conflito de sessões
-Uma sala não pode possuir sessões sobrepostas.
-O sistema verifica os intervalos de horário antes de criar uma nova sessão.
-Histórico de valores
-O preço do ingresso é armazenado no próprio Ticket.
-Isso evita que uma alteração futura na tabela de preços altere o valor de uma compra já realizada.
+  → POST /orders
+  → PENDING + SeatHold (10 min)
+  → POST /orders/:id/pay
+  → PAID + ACTIVE Ticket
 
-### 🏗️ Arquitetura
-O backend utiliza uma arquitetura organizada por responsabilidades:
-HTTP Request
-     ↓
-Routes
-     ↓
-Middlewares
-     ↓
-Controllers
-     ↓
-Services
-     ↓
-Prisma ORM
-     ↓
-PostgreSQL
-Controllers
-Responsáveis pela camada HTTP:
-- recebem requisições;
-- chamam os serviços;
-- retornam respostas.
-Services
-Concentram as regras de negócio.
-Exemplos:
-- criação de sessões;
-- validação de conflitos;
-- geração de assentos;
-- processo de compra;
-- reserva de assentos.
-Schemas
-Responsáveis pela validação dos dados recebidos pela API.
-Utilizam Zod.
-DTOs
-Definem os dados utilizados entre as diferentes camadas da aplicação.
-Prisma ORM
-Responsável pelo acesso tipado ao banco utilizando o Prisma ORM 8.
-PostgreSQL
-Responsável pela persistência dos dados relacionais.
+SeatHold expirado
+  → EXPIRED + assento disponível
 
-### 🛠️ Tecnologias
-Backend
-- Node.js
-- TypeScript
-- Express
-- Prisma ORM 8
-- Zod
-Banco de dados
-- PostgreSQL 17
-Frontend
-- React
-- TypeScript
-Infraestrutura
-- Docker
-- Docker Compose
-Ferramentas
-- Git
-- Yarn
-- Zed / VS Code
+POST /orders/:id/cancel (até 2h antes da sessão)
+  → CANCELLED Order + CANCELLED Ticket + assento disponível
 
-### 🗂️ Estrutura do projeto
-cinevo/
-├── backend/
-│   ├── src/
-│   │   ├── controllers/
-│   │   ├── dtos/
-│   │   ├── middlewares/
-│   │   ├── routes/
-│   │   ├── schemas/
-│   │   ├── services/
-│   │   ├── prisma/
-│   │   │   ├── contract.prisma
-│   │   │   ├── contract.json
-│   │   │   ├── contract.d.ts
-│   │   │   └── db.ts
-│   │   ├── app.ts
-│   │   └── server.ts
-│   ├── .env
-│   ├── prisma.config.ts
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── .yarnrc.yml
-│
-├── frontend/
-│   └── ...
-│
-├── docker-compose.yml
-├── .gitignore
-└── README.md
+POST /tickets/validate
+  → USED Ticket
+```
 
-### 🗃️ Modelo de dados
-Principais entidades:
-User
- │
- ├── Order
- │     └── Ticket
- │
- └── CinemaAdmin
-        │
-        └── Cinema
-              │
-              └── Room
-                    │
-                    └── Seat
+O serviço de expiração roda quando a API inicia, a cada minuto e antes de operações críticas de consulta, criação de pedido e pagamento.
 
-Movie
- │
- └── Session
-       │
-       ├── Room
-       └── Ticket
-Entidades
-Entidade	Responsabilidade
-User	Usuários e perfis
-Cinema	Cinemas cadastrados
-CinemaAdmin	Administradores dos cinemas
-Room	Salas de exibição
-Seat	Assentos físicos
-Movie	Filmes
-Session	Exibições dos filmes
-Order	Pedidos de compra
-Ticket	Ingressos individuais
+## Papéis e permissões
 
+| Papel | Acesso principal |
+| --- | --- |
+| `CUSTOMER` | catálogo, sessões, assentos, pedidos, tickets, QR Code e cancelamento próprio |
+| `CINEMA_ADMIN` | salas, assentos, sessões e validação de tickets do cinema ao qual está vinculado |
+| `PLATFORM_ADMIN` | cinemas, filmes, usuários, vínculo de administradores e validação de qualquer ticket |
 
+Um administrador de cinema é vinculado por `CinemaAdmin`. A plataforma usa:
 
-### 🔌 API
-Health
-GET /health
-Filmes
-GET    /movies
-POST   /movies
-GET    /movies/:id
-PATCH  /movies/:id
-DELETE /movies/:id
-Cinemas
+```http
+POST /cinemas/:cinemaId/admins
+Authorization: Bearer <platform-token>
+
+{ "userId": 123 }
+```
+
+Novos usuários se registram como `CUSTOMER`. O primeiro `PLATFORM_ADMIN` precisa ser promovido por um procedimento controlado de bootstrap no banco, pois não há endpoint público para elevar privilégios.
+
+## API atual
+
+O contrato em OpenAPI 3.1 está em [`backend/openapi.yaml`](backend/openapi.yaml). Ele pode ser importado no Swagger UI, Postman ou Insomnia.
+
+### Público
+
+```http
+GET  /health
+GET  /movies
 GET  /cinemas
-POST /cinemas
-Salas
 GET  /rooms
-POST /rooms
-Assentos
 GET  /rooms/:roomId/seats
-POST /rooms/:roomId/seats
-Sessões
 GET  /sessions
-POST /sessions
 GET  /sessions/:id
-Pedidos
+GET  /sessions/:sessionId/seats
+POST /users
+POST /auth/login
+GET  /auth/me
+```
+
+### Cliente autenticado
+
+```http
+POST /orders
+POST /orders/:id/pay
+POST /orders/:id/cancel
 GET  /orders
 GET  /orders/:id
-POST /orders
-POST /orders/:id/cancel
-Ingressos
-GET /tickets/:id
+GET  /tickets
+GET  /tickets/:code/qrcode
+GET  /favorites
+POST /favorites/:movieId
+DELETE /favorites/:movieId
+```
 
-### 🐳 Executando com Docker
-O PostgreSQL é executado através do Docker Compose.
+### Administração
+
+```http
+GET  /admin/dashboard                    # PLATFORM_ADMIN
+POST /cinemas                         # PLATFORM_ADMIN
+POST /cinemas/:cinemaId/admins         # PLATFORM_ADMIN
+POST /movies                           # PLATFORM_ADMIN
+GET  /users                            # PLATFORM_ADMIN
+POST /rooms                            # CINEMA_ADMIN vinculado ou PLATFORM_ADMIN
+POST /rooms/:roomId/seats              # CINEMA_ADMIN vinculado ou PLATFORM_ADMIN
+POST /sessions                         # CINEMA_ADMIN vinculado ou PLATFORM_ADMIN
+POST /tickets/validate                 # CINEMA_ADMIN vinculado ou PLATFORM_ADMIN
+```
+
+## Configuração local
+
+Suba a API e o PostgreSQL:
+
+```bash
 docker compose up -d
-Verificar o container:
-docker ps
-O banco utiliza:
-Host: localhost
-Port: 5433
-Database: cinevo
-User: cinevo
-Password: cinevo
+```
 
-### ⚙️ Configuração
-Crie um arquivo .env dentro de backend:
+A API ficará em `http://localhost:3333`. O container aplica atualizações aditivas do contrato Prisma antes de iniciar.
+
+Crie `backend/.env` a partir de `backend/.env.example`:
+
+```env
 DATABASE_URL="postgresql://cinevo:cinevo@localhost:5433/cinevo"
-Instale as dependências:
+JWT_SECRET="cinevo-development-secret-change-me"
+```
+
+Instale dependências e atualize o contrato:
+
+```bash
+cd backend
 yarn install
+yarn prisma contract emit
+yarn prisma db update
+```
 
-### ▶️ Executando o backend
-Modo desenvolvimento:
+Execute a API:
+
+```bash
 yarn dev
-Build:
-yarn build
-Produção:
-yarn start
-API:
-http://localhost:3334
-Health check:
-http://localhost:3334/health
+```
 
-### 🧪 Testes
-O projeto possui testes para:
-- validação de dados;
-- regras de negócio;
-- criação de sessões;
-- conflitos de horários;
-- disponibilidade de assentos;
-- criação de pedidos;
-- prevenção de venda duplicada;
-- cancelamento;
-- autenticação e autorização.
+### Dados de demonstração
 
-### 🔐 Segurança
-O backend possui:
-- validação de entrada;
-- autenticação;
-- autorização por perfil;
-- senhas armazenadas com hash;
-- proteção contra operações inválidas;
-- restrições de integridade no banco;
-- controle de acesso aos recursos do cinema.
+Com o banco atualizado, preencha o ambiente local com cinemas, salas, assentos, filmes e sessões futuras:
 
-### 📈 Fluxo de compra
-O fluxo principal do cliente é:
-Descobrir filme
-      ↓
-Escolher cinema
-      ↓
-Escolher sessão
-      ↓
-Visualizar mapa de assentos
-      ↓
-Selecionar assentos
-      ↓
-Reservar temporariamente
-      ↓
-Criar pedido
-      ↓
-Pagamento
-      ↓
-Confirmar pedido
-      ↓
-Emitir ingressos
-      ↓
-Gerar QR Code
+```bash
+cd backend
+yarn seed
+```
 
-### 🎯 Principais desafios técnicos
-O projeto foi estruturado para trabalhar problemas presentes em sistemas reais:
-Concorrência
-Dois usuários podem tentar comprar o mesmo assento simultaneamente.
-A aplicação utiliza regras de negócio e restrições no banco para impedir que uma mesma combinação de sessão e assento seja vendida duas vezes.
-Modelagem relacional
-A disponibilidade de um assento não pertence ao assento físico, mas ao relacionamento entre:
-Sessão + Assento
-Integridade
-O PostgreSQL também atua como camada de proteção através de:
-- foreign keys;
-- unique constraints;
-- índices;
-- relacionamentos.
-Regras de negócio
-As regras não ficam concentradas nos controllers.
-A camada de services centraliza operações como:
-- conflitos de sessão;
-- reserva;
-- compra;
-- cancelamento;
-- emissão de ingressos.
+A seed é segura para repetir no mesmo dia. Use uma destas contas no frontend ou na API:
 
-### 📌 Roadmap funcional
-#### Catálogo
-- [x] Cadastro de filmes
-- [x] Consulta de filmes
-- [ ] Validação dos dados
-#### Cinemas
-- [x] Cadastro de cinemas
-- [x] Cadastro de salas
-- [ ] Configuração de assentos
-#### Sessões
-- [x] Cadastro de sessões
-- [ ] Validação de horários
-- [x] Associação filme/sala
-#### Compras
-- [ ] Seleção de assentos
-- [ ] Reserva temporária
-- [ ] Criação de pedidos
-- [ ] Controle de status
-- [ ] Emissão de ingressos
-- [ ] QR Code
-#### Usuários
-- [ ] Cadastro
-- [ ] Login
-- [ ] Autorização por perfil
-- [ ] Histórico de compras
-#### Frontend
-- [ ] Catálogo
-- [ ] Página de filme
-- [ ] Sessões
-- [ ] Mapa de assentos
-- [ ] Checkout
-- [ ] Meus ingressos
-- [ ] Área administrativa
+| Perfil | E-mail | Senha |
+| --- | --- | --- |
+| Cliente | `cliente@cinevo.local` | `Cinevo#123` |
+| Administrador da plataforma | `admin@cinevo.local` | `Cinevo#123` |
+| Administrador do Cinevo Paulista | `gerente@cinevo.local` | `Cinevo#123` |
 
-### 🔮 Possíveis evoluções
-O Cinevo pode posteriormente receber:
-- pagamentos reais;
-- cupons;
-- promoções;
-- preços dinâmicos;
-- programa de fidelidade;
-- notificações por e-mail;
-- integração com leitores de QR Code;
-- relatórios financeiros;
-- dashboard operacional;
-- múltiplas formas de pagamento.
+Se preferir executar a API fora do Docker, a API estará em `http://localhost:3333`.
 
-### 👩‍💻 Projeto
-Cinevo
-Plataforma de gestão e venda de ingressos para cinemas.
-Desenvolvido como projeto de portfólio com foco em:
-- desenvolvimento backend;
-- TypeScript;
-- APIs REST;
-- modelagem relacional;
-- regras de negócio;
-- PostgreSQL;
-- Prisma ORM 8;
-- arquitetura de software;
-- desenvolvimento full stack.
+## Frontend
+
+O frontend fica em [`frontend`](frontend) e foi construído a partir dos protótipos do Cinevo. Ele mantém a descoberta de filmes pública e só solicita identificação quando o cliente tenta reservar os assentos.
+
+```bash
+cd frontend
+yarn install
+yarn dev
+```
+
+O Vite abre em `http://localhost:5173` e encaminha chamadas feitas para `/api` à API local em `http://localhost:3333`. Para publicar o frontend em uma origem diferente, configure:
+
+```env
+# backend/.env
+FRONTEND_ORIGIN="https://seu-frontend.example"
+
+# frontend/.env
+VITE_API_URL="https://sua-api.example"
+```
+
+O fluxo disponível é:
+
+```text
+Catálogo público
+  → cinema e horário
+  → assentos disponíveis
+  → login ou cadastro
+  → reserva temporária
+  → pagamento simulado
+  → ingresso com QR Code
+  → histórico, perfil e cancelamento elegível
+```
+
+## Testes
+
+Os testes de integração usam um banco isolado chamado `cinevo_test`. Crie-o uma vez:
+
+```bash
+docker exec cinevo-postgres createdb -U cinevo cinevo_test
+```
+
+Depois aplique o contrato e execute a suíte:
+
+```bash
+cd backend
+DATABASE_URL="postgresql://cinevo:cinevo@localhost:5433/cinevo_test" yarn prisma db update
+DATABASE_URL_TEST="postgresql://cinevo:cinevo@localhost:5433/cinevo_test" yarn test
+```
+
+A suíte cobre:
+
+- pagamento e prevenção de venda duplicada;
+- expiração de hold e liberação do assento;
+- validação única de ingresso por administrador vinculado ao cinema.
+
+## Integração contínua
+
+O workflow [CI](.github/workflows/ci.yml) executa em pushes para `main` e em pull requests. Ele sobe um PostgreSQL efêmero, aplica o contrato no banco de testes, valida o TypeScript, executa os testes de integração e constrói o frontend.
+
+## Próximos passos
+
+- documentação OpenAPI e tratamento centralizado de erros;
+- dashboard administrativo e métricas de venda;
+- favoritos persistentes e preferências de cliente;
+- deploy em ambiente público.
