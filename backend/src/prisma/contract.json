@@ -129,6 +129,19 @@
               }
             ]
           },
+          "TicketStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "ACTIVE",
+                "value": "ACTIVE"
+              },
+              {
+                "name": "CANCELLED",
+                "value": "CANCELLED"
+              }
+            ]
+          },
           "TicketType": {
             "codecId": "pg/text@1",
             "members": [
@@ -1203,6 +1216,19 @@
                   "kind": "scalar"
                 }
               },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "TicketStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
               "type": {
                 "nullable": false,
                 "type": {
@@ -1296,6 +1322,9 @@
                 },
                 "sessionId": {
                   "column": "sessionId"
+                },
+                "status": {
+                  "column": "status"
                 },
                 "type": {
                   "column": "type"
@@ -2256,6 +2285,11 @@
             "ticket": {
               "checks": [
                 {
+                  "expression": "\"status\" IN ('ACTIVE', 'CANCELLED')",
+                  "name": "ticket_status_check_e5a8c7be",
+                  "prefix": "ticket_status_check"
+                },
+                {
                   "expression": "\"type\" IN ('FULL', 'HALF')",
                   "name": "ticket_type_check_5900ef46",
                   "prefix": "ticket_type_check"
@@ -2304,6 +2338,21 @@
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
                   "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "ACTIVE"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "TicketStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
                 },
                 "type": {
                   "codecId": "pg/text@1",
@@ -2396,6 +2445,16 @@
                   "name": "ticket_sessionId_idx_29f415d4",
                   "prefix": "ticket_sessionId_idx",
                   "unique": false
+                },
+                {
+                  "columns": [
+                    "sessionId",
+                    "seatId"
+                  ],
+                  "name": "tickets_active_session_seat_083fbefa",
+                  "prefix": "tickets_active_session_seat",
+                  "unique": true,
+                  "where": "(status = 'ACTIVE')"
                 }
               ],
               "primaryKey": {
@@ -2407,12 +2466,6 @@
                 {
                   "columns": [
                     "code"
-                  ]
-                },
-                {
-                  "columns": [
-                    "sessionId",
-                    "seatId"
                   ]
                 }
               ]
@@ -2537,6 +2590,13 @@
                 "ACCESSIBLE"
               ]
             },
+            "TicketStatus": {
+              "kind": "valueSet",
+              "values": [
+                "ACTIVE",
+                "CANCELLED"
+              ]
+            },
             "TicketType": {
               "kind": "valueSet",
               "values": [
@@ -2558,7 +2618,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "2d7317a1130ee26e384536b5d93b2632f30b60a7315755ee83cdcbfa93ce32dd"
+    "storageHash": "caf0c15befeffc70f3129d3870b7c85180bf9ca9701fb57c9ac4ead217f4e299"
   },
   "execution": {
     "executionHash": "100e17e751b03462bd442944dc00d6c6a95a7e98da33d2ee0c8929467edb3210",

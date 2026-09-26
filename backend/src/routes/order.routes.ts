@@ -6,6 +6,7 @@ import {
   getOrder,
   getOrders,
   getTickets,
+  postCancelOrder,
   postOrder,
   postPayOrder,
 } from '../controllers/order.controller.js';
@@ -42,4 +43,10 @@ orderRoutes.post(
   '/orders/:id/pay',
   authenticate,
   postPayOrder,
+);
+
+orderRoutes.post(
+  '/orders/:id/cancel',
+  authenticate,
+  postCancelOrder,
 );

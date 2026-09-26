@@ -82,7 +82,9 @@ export async function payOrder(
       .all();
 
     const soldSeatIds = new Set(
-      soldTickets.map((ticket) => ticket.seatId),
+      soldTickets
+        .filter((ticket) => ticket.status === 'ACTIVE')
+        .map((ticket) => ticket.seatId),
     );
 
     if (holds.some((hold) => soldSeatIds.has(hold.seatId))) {

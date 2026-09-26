@@ -35,7 +35,9 @@ export async function getSessionSeats(sessionId: number) {
   const now = new Date();
 
   const soldSeatIds = new Set(
-    tickets.map((ticket) => ticket.seatId),
+    tickets
+      .filter((ticket) => ticket.status === 'ACTIVE')
+      .map((ticket) => ticket.seatId),
   );
 
   const heldSeatIds = new Set(

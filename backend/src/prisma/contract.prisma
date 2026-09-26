@@ -37,6 +37,11 @@ enum TicketType {
   HALF
 }
 
+enum TicketStatus {
+  ACTIVE
+  CANCELLED
+}
+
 model User {
   id           Int                        @id @default(autoincrement())
   name         String
@@ -205,9 +210,15 @@ model Ticket {
   type      TicketType
   price     Decimal
   code      String                     @unique
+  status    TicketStatus               @default(ACTIVE)
 
   createdAt TimestamptzString          @default(now())
   updatedAt temporal.updatedAtString()
 
-  @@unique([sessionId, seatId])
+  @@index(
+    [sessionId, seatId],
+    unique: true,
+    where: "(status = 'ACTIVE')",
+    name: "tickets_active_session_seat",
+  )
 }

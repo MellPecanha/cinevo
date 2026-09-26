@@ -9,6 +9,9 @@ import {
 import {
   payOrder,
 } from '../services/payment.service.js';
+import {
+  cancelOrder,
+} from '../services/cancellation.service.js';
 
 export async function postOrder(
   req: Request,
@@ -148,6 +151,45 @@ export async function postPayOrder(
       error instanceof Error
         ? error.message
         : 'Não foi possível realizar o pagamento';
+
+    res.status(400).json({
+      message,
+    });
+  }
+}
+
+export async function postCancelOrder(
+  req: Request,
+  res: Response,
+) {
+  if (!req.user) {
+    res.status(401).json({
+      message: 'Usuário não autenticado',
+    });
+    return;
+  }
+
+  const orderId = getOrderId(req.params.id);
+
+  if (!orderId) {
+    res.status(400).json({
+      message: 'Pedido inválido',
+    });
+    return;
+  }
+
+  try {
+    const order = await cancelOrder(
+      req.user.sub,
+      orderId,
+    );
+
+    res.json(order);
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : 'Não foi possível cancelar o pedido';
 
     res.status(400).json({
       message,
