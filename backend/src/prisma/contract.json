@@ -12,6 +12,10 @@
       "model": "CinemaAdmin",
       "namespace": "public"
     },
+    "favorite": {
+      "model": "Favorite",
+      "namespace": "public"
+    },
     "movie": {
       "model": "Movie",
       "namespace": "public"
@@ -135,6 +139,10 @@
               {
                 "name": "ACTIVE",
                 "value": "ACTIVE"
+              },
+              {
+                "name": "USED",
+                "value": "USED"
               },
               {
                 "name": "CANCELLED",
@@ -360,6 +368,80 @@
               "table": "cinemaAdmin"
             }
           },
+          "Favorite": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "movieId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "movie": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "movieId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Movie",
+                  "namespace": "public"
+                }
+              },
+              "user": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "movieId": {
+                  "column": "movieId"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "favorite"
+            }
+          },
           "Movie": {
             "fields": {
               "classification": {
@@ -433,6 +515,21 @@
               }
             },
             "relations": {
+              "favorites": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "movieId"
+                  ]
+                },
+                "to": {
+                  "model": "Favorite",
+                  "namespace": "public"
+                }
+              },
               "sessions": {
                 "cardinality": "1:N",
                 "on": {
@@ -1248,6 +1345,13 @@
                   "codecId": "pg/timestamptz-string@1",
                   "kind": "scalar"
                 }
+              },
+              "usedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
               }
             },
             "relations": {
@@ -1331,6 +1435,9 @@
                 },
                 "updatedAt": {
                   "column": "updatedAt"
+                },
+                "usedAt": {
+                  "column": "usedAt"
                 }
               },
               "namespaceId": "public",
@@ -1415,6 +1522,21 @@
                 },
                 "to": {
                   "model": "CinemaAdmin",
+                  "namespace": "public"
+                }
+              },
+              "favorites": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "Favorite",
                   "namespace": "public"
                 }
               },
@@ -1607,6 +1729,88 @@
                 "columns": [
                   "cinemaId",
                   "userId"
+                ]
+              },
+              "uniques": []
+            },
+            "favorite": {
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "movieId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "favorite"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "user"
+                  }
+                },
+                {
+                  "source": {
+                    "columns": [
+                      "movieId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "favorite"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "movie"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "movieId"
+                  ],
+                  "name": "favorite_movieId_idx_8cb9f9db",
+                  "prefix": "favorite_movieId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "favorite_userId_idx_a489d58a",
+                  "prefix": "favorite_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "userId",
+                  "movieId"
                 ]
               },
               "uniques": []
@@ -2285,8 +2489,8 @@
             "ticket": {
               "checks": [
                 {
-                  "expression": "\"status\" IN ('ACTIVE', 'CANCELLED')",
-                  "name": "ticket_status_check_e5a8c7be",
+                  "expression": "\"status\" IN ('ACTIVE', 'USED', 'CANCELLED')",
+                  "name": "ticket_status_check_1e9ad4cc",
                   "prefix": "ticket_status_check"
                 },
                 {
@@ -2369,6 +2573,11 @@
                   "codecId": "pg/timestamptz-string@1",
                   "nativeType": "timestamptz",
                   "nullable": false
+                },
+                "usedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
                 }
               },
               "foreignKeys": [
@@ -2451,10 +2660,10 @@
                     "sessionId",
                     "seatId"
                   ],
-                  "name": "tickets_active_session_seat_083fbefa",
+                  "name": "tickets_active_session_seat_6544b081",
                   "prefix": "tickets_active_session_seat",
                   "unique": true,
-                  "where": "(status = 'ACTIVE')"
+                  "where": "(status <> 'CANCELLED')"
                 }
               ],
               "primaryKey": {
@@ -2594,6 +2803,7 @@
               "kind": "valueSet",
               "values": [
                 "ACTIVE",
+                "USED",
                 "CANCELLED"
               ]
             },
@@ -2618,7 +2828,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "caf0c15befeffc70f3129d3870b7c85180bf9ca9701fb57c9ac4ead217f4e299"
+    "storageHash": "2dae0fc28d83fdb75a6c519b2da8c7a30159cfdef1c4a4ea9840b5604a65344c"
   },
   "execution": {
     "executionHash": "100e17e751b03462bd442944dc00d6c6a95a7e98da33d2ee0c8929467edb3210",

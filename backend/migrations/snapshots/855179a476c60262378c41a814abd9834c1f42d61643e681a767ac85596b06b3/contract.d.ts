@@ -34,7 +34,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'2dae0fc28d83fdb75a6c519b2da8c7a30159cfdef1c4a4ea9840b5604a65344c'>;
+  StorageHashBase<'855179a476c60262378c41a814abd9834c1f42d61643e681a767ac85596b06b3'>;
 export type ExecutionHash =
   ExecutionHashBase<'100e17e751b03462bd442944dc00d6c6a95a7e98da33d2ee0c8929467edb3210'>;
 export type ProfileHash =
@@ -256,11 +256,6 @@ export type FieldOutputTypes = {
       readonly userId: CodecTypes['pg/int4@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
-    readonly Favorite: {
-      readonly userId: CodecTypes['pg/int4@1']['output'];
-      readonly movieId: CodecTypes['pg/int4@1']['output'];
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    };
     readonly Movie: {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly title: CodecTypes['pg/text@1']['output'];
@@ -356,11 +351,6 @@ export type FieldInputTypes = {
     readonly CinemaAdmin: {
       readonly cinemaId: CodecTypes['pg/int4@1']['input'];
       readonly userId: CodecTypes['pg/int4@1']['input'];
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-    };
-    readonly Favorite: {
-      readonly userId: CodecTypes['pg/int4@1']['input'];
-      readonly movieId: CodecTypes['pg/int4@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
     readonly Movie: {
@@ -460,11 +450,6 @@ export type StorageColumnTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly userId: CodecTypes['pg/int4@1']['output'];
     };
-    readonly favorite: {
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly movieId: CodecTypes['pg/int4@1']['output'];
-      readonly userId: CodecTypes['pg/int4@1']['output'];
-    };
     readonly movie: {
       readonly classification: 'L' | 'AGE_10' | 'AGE_12' | 'AGE_14' | 'AGE_16' | 'AGE_18';
       readonly coverUrl: CodecTypes['pg/text@1']['output'] | null;
@@ -562,11 +547,6 @@ export type StorageColumnInputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly userId: CodecTypes['pg/int4@1']['input'];
     };
-    readonly favorite: {
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly movieId: CodecTypes['pg/int4@1']['input'];
-      readonly userId: CodecTypes['pg/int4@1']['input'];
-    };
     readonly movie: {
       readonly classification: 'L' | 'AGE_10' | 'AGE_12' | 'AGE_14' | 'AGE_16' | 'AGE_18';
       readonly coverUrl: CodecTypes['pg/text@1']['input'] | null;
@@ -660,9 +640,8 @@ export namespace Models {
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     cinemaAdmins: public_CinemaAdmin[];
-    favorites: public_Favorite[];
     orders: public_Order[];
-    readonly [RelationKeys]?: 'cinemaAdmins' | 'favorites' | 'orders';
+    readonly [RelationKeys]?: 'cinemaAdmins' | 'orders';
   };
   export type public_Cinema = {
     id: CodecTypes['pg/int4@1']['output'];
@@ -719,17 +698,8 @@ export namespace Models {
     trailerUrl: CodecTypes['pg/text@1']['output'] | null;
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    favorites: public_Favorite[];
     sessions: public_Session[];
-    readonly [RelationKeys]?: 'favorites' | 'sessions';
-  };
-  export type public_Favorite = {
-    userId: CodecTypes['pg/int4@1']['output'];
-    movieId: CodecTypes['pg/int4@1']['output'];
-    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    movie: public_Movie;
-    user: public_User;
-    readonly [RelationKeys]?: 'movie' | 'user';
+    readonly [RelationKeys]?: 'sessions';
   };
   export type public_Session = {
     id: CodecTypes['pg/int4@1']['output'];
@@ -799,7 +769,6 @@ export declare const models: {
     Room: Models.public_Room;
     Seat: Models.public_Seat;
     Movie: Models.public_Movie;
-    Favorite: Models.public_Favorite;
     Session: Models.public_Session;
     Order: Models.public_Order;
     SeatHold: Models.public_SeatHold;
@@ -930,68 +899,6 @@ type ContractBase = Omit<
                   readonly target: {
                     readonly namespaceId: 'public' & NamespaceId;
                     readonly tableName: 'user';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-              ];
-            };
-            readonly favorite: {
-              columns: {
-                readonly userId: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                };
-                readonly movieId: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                };
-                readonly createdAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-              };
-              primaryKey: { readonly columns: readonly ['userId', 'movieId'] };
-              uniques: readonly [];
-              indexes: readonly [
-                {
-                  readonly name: 'favorite_movieId_idx_8cb9f9db';
-                  readonly prefix: 'favorite_movieId_idx';
-                  readonly columns: readonly ['movieId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'favorite_userId_idx_a489d58a';
-                  readonly prefix: 'favorite_userId_idx';
-                  readonly columns: readonly ['userId'];
-                  readonly unique: false;
-                },
-              ];
-              foreignKeys: readonly [
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'favorite';
-                    readonly columns: readonly ['userId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'user';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'favorite';
-                    readonly columns: readonly ['movieId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'movie';
                     readonly columns: readonly ['id'];
                   };
                 },
@@ -1725,7 +1632,6 @@ type ContractBase = Omit<
     readonly room: { readonly namespace: 'public' & NamespaceId; readonly model: 'Room' };
     readonly seat: { readonly namespace: 'public' & NamespaceId; readonly model: 'Seat' };
     readonly movie: { readonly namespace: 'public' & NamespaceId; readonly model: 'Movie' };
-    readonly favorite: { readonly namespace: 'public' & NamespaceId; readonly model: 'Favorite' };
     readonly session: { readonly namespace: 'public' & NamespaceId; readonly model: 'Session' };
     readonly order: { readonly namespace: 'public' & NamespaceId; readonly model: 'Order' };
     readonly seatHold: { readonly namespace: 'public' & NamespaceId; readonly model: 'SeatHold' };
@@ -1858,57 +1764,6 @@ type ContractBase = Omit<
               };
             };
           };
-          readonly Favorite: {
-            readonly fields: {
-              readonly userId: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly movieId: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly createdAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-            };
-            readonly relations: {
-              readonly movie: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Movie';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['movieId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-              readonly user: {
-                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['userId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-            };
-            readonly storage: {
-              readonly table: 'favorite';
-              readonly namespaceId: 'public';
-              readonly fields: {
-                readonly userId: { readonly column: 'userId' };
-                readonly movieId: { readonly column: 'movieId' };
-                readonly createdAt: { readonly column: 'createdAt' };
-              };
-            };
-          };
           readonly Movie: {
             readonly fields: {
               readonly id: {
@@ -1955,17 +1810,6 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
-              readonly favorites: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Favorite';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['movieId'];
-                };
-              };
               readonly sessions: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -2589,17 +2433,6 @@ type ContractBase = Omit<
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
                   readonly model: 'CinemaAdmin';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['userId'];
-                };
-              };
-              readonly favorites: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Favorite';
                 };
                 readonly cardinality: '1:N';
                 readonly on: {

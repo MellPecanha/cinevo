@@ -39,6 +39,7 @@ enum TicketType {
 
 enum TicketStatus {
   ACTIVE
+  USED
   CANCELLED
 }
 
@@ -52,6 +53,7 @@ model User {
 
   orders       Order[]
   cinemaAdmins CinemaAdmin[]
+  favorites    Favorite[]
 
   createdAt    TimestamptzString          @default(now())
   updatedAt    temporal.updatedAtString()
@@ -128,9 +130,23 @@ model Movie {
   trailerUrl     String?
 
   sessions       Session[]
+  favorites      Favorite[]
 
   createdAt      TimestamptzString          @default(now())
   updatedAt      temporal.updatedAtString()
+}
+
+model Favorite {
+  user    User @relation(fields:[userId], references:[id])
+  userId  Int
+
+  movie   Movie @relation(fields:[movieId], references:[id])
+  movieId Int
+
+  createdAt TimestamptzString @default(now())
+
+  @@id([userId, movieId])
+  @@index([movieId])
 }
 
 model Session {
@@ -211,6 +227,7 @@ model Ticket {
   price     Decimal
   code      String                     @unique
   status    TicketStatus               @default(ACTIVE)
+  usedAt    TimestamptzString?
 
   createdAt TimestamptzString          @default(now())
   updatedAt temporal.updatedAtString()
@@ -218,7 +235,7 @@ model Ticket {
   @@index(
     [sessionId, seatId],
     unique: true,
-    where: "(status = 'ACTIVE')",
+    where: "(status <> 'CANCELLED')",
     name: "tickets_active_session_seat",
   )
 }
