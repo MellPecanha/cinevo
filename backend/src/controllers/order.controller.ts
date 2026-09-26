@@ -2,6 +2,9 @@ import type { Request, Response } from 'express';
 
 import {
   createOrder,
+  getOrderById,
+  listOrdersByUser,
+  listTicketsByUser,
 } from '../services/order.service.js';
 import {
   payOrder,
@@ -37,6 +40,82 @@ export async function postOrder(
   }
 }
 
+function getOrderId(value: string | string[] | undefined) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const orderId = Number(value);
+
+  return Number.isSafeInteger(orderId) && orderId > 0
+    ? orderId
+    : null;
+}
+
+export async function getOrders(
+  req: Request,
+  res: Response,
+) {
+  if (!req.user) {
+    res.status(401).json({
+      message: 'Usuário não autenticado',
+    });
+    return;
+  }
+
+  const orders = await listOrdersByUser(req.user.sub);
+
+  res.json(orders);
+}
+
+export async function getOrder(
+  req: Request,
+  res: Response,
+) {
+  if (!req.user) {
+    res.status(401).json({
+      message: 'Usuário não autenticado',
+    });
+    return;
+  }
+
+  const orderId = getOrderId(req.params.id);
+
+  if (!orderId) {
+    res.status(400).json({
+      message: 'Pedido inválido',
+    });
+    return;
+  }
+
+  const order = await getOrderById(req.user.sub, orderId);
+
+  if (!order) {
+    res.status(404).json({
+      message: 'Pedido não encontrado',
+    });
+    return;
+  }
+
+  res.json(order);
+}
+
+export async function getTickets(
+  req: Request,
+  res: Response,
+) {
+  if (!req.user) {
+    res.status(401).json({
+      message: 'Usuário não autenticado',
+    });
+    return;
+  }
+
+  const tickets = await listTicketsByUser(req.user.sub);
+
+  res.json(tickets);
+}
+
 export async function postPayOrder(
   req: Request,
   res: Response,
@@ -48,9 +127,9 @@ export async function postPayOrder(
     return;
   }
 
-  const orderId = Number(req.params.id);
+  const orderId = getOrderId(req.params.id);
 
-  if (!Number.isSafeInteger(orderId) || orderId <= 0) {
+  if (!orderId) {
     res.status(400).json({
       message: 'Pedido inválido',
     });

@@ -39,6 +39,55 @@ function ticketPriceInCents(
   return sessionPriceInCents;
 }
 
+function includeOrderDetails() {
+  return db.orm.public.Order
+    .include('tickets', (tickets) =>
+      tickets
+        .include('seat')
+        .include('session', (session) =>
+          session
+            .include('movie')
+            .include('room', (room) => room.include('cinema')),
+        ),
+    )
+    .include('holds', (holds) =>
+      holds
+        .include('seat')
+        .include('session', (session) =>
+          session
+            .include('movie')
+            .include('room', (room) => room.include('cinema')),
+        ),
+    );
+}
+
+export async function listOrdersByUser(userId: number) {
+  await expireSeatHolds();
+
+  return includeOrderDetails()
+    .where({ userId })
+    .orderBy((order) => order.createdAt.desc())
+    .all();
+}
+
+export async function getOrderById(
+  userId: number,
+  orderId: number,
+) {
+  await expireSeatHolds();
+
+  return includeOrderDetails()
+    .where({ id: orderId })
+    .where({ userId })
+    .first();
+}
+
+export async function listTicketsByUser(userId: number) {
+  const orders = await listOrdersByUser(userId);
+
+  return orders.flatMap((order) => order.tickets);
+}
+
 export async function createOrder(
   userId: number,
   data: CreateOrderDTO,
