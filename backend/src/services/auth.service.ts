@@ -56,3 +56,22 @@ export async function login(data: LoginInput) {
     },
   };
 }
+
+export async function getAuthenticatedUser(userId: number) {
+  const user = await db.orm.public.User
+    .where({ id: userId })
+    .first();
+
+  if (!user) {
+    return null;
+  }
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    role: user.role,
+    createdAt: user.createdAt,
+  };
+}

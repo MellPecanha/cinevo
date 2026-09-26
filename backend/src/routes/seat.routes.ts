@@ -7,6 +7,8 @@ import {
 } from '../controllers/seat.controller.js';
 
 import { validate } from '../middlewares/validate.js';
+import { authenticate } from '../middlewares/authenticate.js';
+import { authorizeCinemaFromRoomParam } from '../middlewares/cinema-access.js';
 import {
   generateSeatsSchema,
 } from '../schemas/seat.schema.js';
@@ -20,7 +22,9 @@ seatRoutes.get(
 
 seatRoutes.post(
   '/rooms/:roomId/seats',
+  authenticate,
   validate(generateSeatsSchema),
+  authorizeCinemaFromRoomParam,
   postGenerateSeats,
 );
 

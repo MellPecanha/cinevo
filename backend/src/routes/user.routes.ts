@@ -6,6 +6,8 @@ import {
 } from '../controllers/user.controller.js';
 
 import { validate } from '../middlewares/validate.js';
+import { authenticate } from '../middlewares/authenticate.js';
+import { authorize } from '../middlewares/authorize.js';
 
 import {
   createUserSchema,
@@ -15,6 +17,8 @@ export const userRoutes = Router();
 
 userRoutes.get(
   '/users',
+  authenticate,
+  authorize('PLATFORM_ADMIN'),
   getUsers,
 );
 

@@ -7,6 +7,8 @@ import {
 } from '../controllers/session.controller.js';
 
 import { validate } from '../middlewares/validate.js';
+import { authenticate } from '../middlewares/authenticate.js';
+import { authorizeCinemaFromSessionBody } from '../middlewares/cinema-access.js';
 
 import {
   createSessionSchema,
@@ -26,6 +28,8 @@ sessionRoutes.get(
 
 sessionRoutes.post(
   '/sessions',
+  authenticate,
   validate(createSessionSchema),
+  authorizeCinemaFromSessionBody,
   postSession,
 );
