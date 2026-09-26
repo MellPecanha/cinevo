@@ -375,9 +375,9 @@ yarn build
 Produção:
 yarn start
 API:
-http://localhost:3333
+http://localhost:3334
 Health check:
-http://localhost:3333/health
+http://localhost:3334/health
 
 ### 🧪 Testes
 O projeto possui testes para:
