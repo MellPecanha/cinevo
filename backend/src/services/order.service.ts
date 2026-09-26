@@ -1,4 +1,5 @@
 import { db } from '../prisma/db.js';
+import { expireSeatHolds } from './seat-hold.service.js';
 
 import type {
   CreateOrderDTO,
@@ -51,6 +52,8 @@ export async function createOrder(
   if (!session) {
     throw new Error('Sessão não encontrada');
   }
+
+  await expireSeatHolds(data.sessionId);
 
   const selectedSeatIds = data.tickets.map(
     (ticket) => ticket.seatId,

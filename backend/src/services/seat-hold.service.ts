@@ -1,20 +1,61 @@
 import { db } from '../prisma/db.js';
 
-const HOLD_DURATION_MINUTES = 10;
+export async function expireSeatHolds(sessionId?: number) {
+  const holds = sessionId
+    ? await db.orm.public.SeatHold
+      .where({ sessionId })
+      .all()
+    : await db.orm.public.SeatHold.all();
 
-export async function createSeatHold(
-  orderId: number,
-  sessionId: number,
-  seatId: number,
-) {
-  const expiresAt = new Date(
-    Date.now() + HOLD_DURATION_MINUTES * 60 * 1000,
-  ).toISOString();
+  const now = new Date();
+  const expiredHolds = holds.filter(
+    (hold) => new Date(hold.expiresAt) <= now,
+  );
 
-  return db.orm.public.SeatHold.create({
-    orderId,
-    sessionId,
-    seatId,
-    expiresAt,
+  if (expiredHolds.length === 0) {
+    return {
+      expiredHolds: 0,
+      expiredOrders: 0,
+    };
+  }
+
+  const expiredOrderIds = new Set(
+    expiredHolds.map((hold) => hold.orderId),
+  );
+
+  return db.transaction(async (tx) => {
+    for (const hold of expiredHolds) {
+      await tx.orm.public.SeatHold
+        .where({ id: hold.id })
+        .delete();
+    }
+
+    let expiredOrders = 0;
+
+    for (const orderId of expiredOrderIds) {
+      const remainingHolds = await tx.orm.public.SeatHold
+        .where({ orderId })
+        .all();
+
+      const order = await tx.orm.public.Order
+        .where({ id: orderId })
+        .first();
+
+      if (
+        remainingHolds.length === 0 &&
+        order?.status === 'PENDING'
+      ) {
+        await tx.orm.public.Order
+          .where({ id: orderId })
+          .update({ status: 'EXPIRED' });
+
+        expiredOrders++;
+      }
+    }
+
+    return {
+      expiredHolds: expiredHolds.length,
+      expiredOrders,
+    };
   });
 }

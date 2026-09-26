@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { db } from '../prisma/db.js';
+import { expireSeatHolds } from './seat-hold.service.js';
 
 function createTicketCode() {
   return `CV-${randomUUID().replaceAll('-', '').toUpperCase()}`;
@@ -24,6 +25,8 @@ export async function payOrder(
   userId: number,
   orderId: number,
 ) {
+  await expireSeatHolds();
+
   return db.transaction(async (tx) => {
     const order = await tx.orm.public.Order
       .where({
@@ -33,6 +36,10 @@ export async function payOrder(
 
     if (!order || order.userId !== userId) {
       throw new Error('Pedido não encontrado');
+    }
+
+    if (order.status === 'EXPIRED') {
+      throw new Error('A reserva dos assentos expirou');
     }
 
     if (order.status !== 'PENDING') {

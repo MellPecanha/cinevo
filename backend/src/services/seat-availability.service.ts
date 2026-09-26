@@ -1,4 +1,5 @@
 import { db } from '../prisma/db.js';
+import { expireSeatHolds } from './seat-hold.service.js';
 
 export async function getSessionSeats(sessionId: number) {
   const session = await db.orm.public.Session
@@ -10,6 +11,8 @@ export async function getSessionSeats(sessionId: number) {
   if (!session) {
     return null;
   }
+
+  await expireSeatHolds(sessionId);
 
   const seats = await db.orm.public.Seat
     .where({
