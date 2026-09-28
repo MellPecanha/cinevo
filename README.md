@@ -224,7 +224,7 @@ DATABASE_URL="postgresql://cinevo:cinevo@localhost:5433/cinevo_test" yarn prisma
 DATABASE_URL_TEST="postgresql://cinevo:cinevo@localhost:5433/cinevo_test" yarn test
 ```
 
-A suíte cobre:
+A suíte é organizada por domínio em `backend/test` e cobre:
 
 - pagamento e prevenção de venda duplicada;
 - expiração de hold e liberação do assento;
