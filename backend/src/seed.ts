@@ -1,5 +1,6 @@
 import 'dotenv/config';
 
+import { randomUUID } from 'node:crypto';
 import { hash } from 'bcrypt';
 
 import { db } from './prisma/db.js';
@@ -11,6 +12,7 @@ type SeedMovie = {
   description: string;
   duration: number;
   classification: 'L' | 'AGE_10' | 'AGE_12' | 'AGE_14' | 'AGE_16' | 'AGE_18';
+  coverUrl: string;
 };
 
 const movies: SeedMovie[] = [
@@ -19,24 +21,28 @@ const movies: SeedMovie[] = [
     description: 'Uma piloto retorna à Terra para encontrar uma cidade que não reconhece mais.',
     duration: 138,
     classification: 'AGE_12',
+    coverUrl: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=900&q=85',
   },
   {
     title: 'Cidade em Chamas',
     description: 'Uma investigação noturna coloca duas famílias no centro de uma escolha impossível.',
     duration: 116,
     classification: 'AGE_14',
+    coverUrl: 'https://images.unsplash.com/photo-1519608487953-e999c86e745c?auto=format&fit=crop&w=900&q=85',
   },
   {
     title: 'O Último Sinal',
     description: 'Mensagens de rádio atravessam décadas e mudam o rumo de uma pequena cidade.',
     duration: 124,
     classification: 'AGE_16',
+    coverUrl: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=85',
   },
   {
     title: 'Maré Alta',
     description: 'Duas pessoas se reencontram quando uma ilha começa a desaparecer do mapa.',
     duration: 108,
     classification: 'AGE_12',
+    coverUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=85',
   },
 ];
 
@@ -125,11 +131,110 @@ async function ensureSession(data: {
     startsAt: data.startsAt,
   }).first();
 
-  return existing ?? db.orm.public.Session.create(data);
+  if (existing) return existing;
+
+  await db.orm.public.Session.create(data);
+
+  const created = await db.orm.public.Session.where({
+    movieId: data.movieId,
+    roomId: data.roomId,
+    startsAt: data.startsAt,
+  }).first();
+
+  if (!created) {
+    throw new Error('Não foi possível criar a sessão de demonstração');
+  }
+
+  return created;
+}
+
+async function clearDatabaseBeforeSeed() {
+  const databaseUrl = process.env['DATABASE_URL'];
+
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL deve estar configurada para executar a seed');
+  }
+
+  if (databaseUrl.includes('cinevo_test')) {
+    throw new Error('A seed não pode apagar o banco de testes');
+  }
+
+  await db.transaction(async (tx) => {
+    for (const ticket of await tx.orm.public.Ticket.all()) {
+      await tx.orm.public.Ticket.where({ id: ticket.id }).delete();
+    }
+
+    for (const hold of await tx.orm.public.SeatHold.all()) {
+      await tx.orm.public.SeatHold.where({ id: hold.id }).delete();
+    }
+
+    for (const favorite of await tx.orm.public.Favorite.all()) {
+      await tx.orm.public.Favorite.where({ userId: favorite.userId, movieId: favorite.movieId }).delete();
+    }
+
+    for (const assignment of await tx.orm.public.CinemaAdmin.all()) {
+      await tx.orm.public.CinemaAdmin.where({ cinemaId: assignment.cinemaId, userId: assignment.userId }).delete();
+    }
+
+    for (const order of await tx.orm.public.Order.all()) {
+      await tx.orm.public.Order.where({ id: order.id }).delete();
+    }
+
+    for (const session of await tx.orm.public.Session.all()) {
+      await tx.orm.public.Session.where({ id: session.id }).delete();
+    }
+
+    for (const seat of await tx.orm.public.Seat.all()) {
+      await tx.orm.public.Seat.where({ id: seat.id }).delete();
+    }
+
+    for (const room of await tx.orm.public.Room.all()) {
+      await tx.orm.public.Room.where({ id: room.id }).delete();
+    }
+
+    for (const movie of await tx.orm.public.Movie.all()) {
+      await tx.orm.public.Movie.where({ id: movie.id }).delete();
+    }
+
+    for (const cinema of await tx.orm.public.Cinema.all()) {
+      await tx.orm.public.Cinema.where({ id: cinema.id }).delete();
+    }
+
+    for (const user of await tx.orm.public.User.all()) {
+      await tx.orm.public.User.where({ id: user.id }).delete();
+    }
+  });
+}
+
+async function createDemoPaidOrder(data: {
+  userId: number;
+  sessionId: number;
+  seatId: number;
+  price: string;
+}) {
+  await db.transaction(async (tx) => {
+    const order = await tx.orm.public.Order.create({
+      userId: data.userId,
+      status: 'PAID',
+      total: data.price,
+    });
+
+    await tx.orm.public.Ticket.create({
+      orderId: order.id,
+      sessionId: data.sessionId,
+      seatId: data.seatId,
+      type: 'FULL',
+      price: data.price,
+      code: `DEMO-${randomUUID()}`,
+      status: 'ACTIVE',
+    });
+  });
 }
 
 async function seed() {
-  const [platformAdmin, cinemaAdmin, customer] = await Promise.all([
+  await clearDatabaseBeforeSeed();
+
+  const [platformAdmin, cinemaAdmin, customer, secondCustomer] = await Promise.all([
     ensureUser({
       name: 'Admin Cinevo',
       email: 'admin@cinevo.local',
@@ -146,13 +251,19 @@ async function seed() {
       phone: '11999990000',
       role: 'CUSTOMER',
     }),
+    ensureUser({
+      name: 'Marina Souza',
+      email: 'marina@cinevo.local',
+      phone: '11988887777',
+      role: 'CUSTOMER',
+    }),
   ]);
 
-  if (!platformAdmin || !cinemaAdmin || !customer) {
+  if (!platformAdmin || !cinemaAdmin || !customer || !secondCustomer) {
     throw new Error('Não foi possível criar os usuários de demonstração');
   }
 
-  const [paulista, pinheiros, moema, copacabana, botafogo] = await Promise.all([
+  const [paulista, pinheiros, moema, copacabana, botafogo, savassi, batel, boaViagem] = await Promise.all([
     ensureCinema({
       name: 'Cinevo Paulista',
       address: 'Av. Paulista, 1000',
@@ -183,15 +294,21 @@ async function seed() {
       city: 'Rio de Janeiro',
       state: 'RJ',
     }),
+    ensureCinema({ name: 'Cinevo Savassi', address: 'Rua Pernambuco, 1200', city: 'Belo Horizonte', state: 'MG' }),
+    ensureCinema({ name: 'Cinevo Batel', address: 'Av. do Batel, 1868', city: 'Curitiba', state: 'PR' }),
+    ensureCinema({ name: 'Cinevo Boa Viagem', address: 'Av. Boa Viagem, 1530', city: 'Recife', state: 'PE' }),
   ]);
 
-  const [standardRoom, vipRoom, pinheirosRoom, moemaRoom, copacabanaRoom, botafogoRoom] = await Promise.all([
+  const [standardRoom, vipRoom, pinheirosRoom, moemaRoom, copacabanaRoom, botafogoRoom, savassiRoom, batelRoom, boaViagemRoom] = await Promise.all([
     ensureRoom(paulista.id, 1, 'STANDARD'),
     ensureRoom(paulista.id, 2, 'VIP'),
     ensureRoom(pinheiros.id, 1, 'STANDARD'),
     ensureRoom(moema.id, 3, 'VIP'),
     ensureRoom(copacabana.id, 1, 'STANDARD'),
     ensureRoom(botafogo.id, 2, 'STANDARD'),
+    ensureRoom(savassi.id, 1, 'STANDARD'),
+    ensureRoom(batel.id, 1, 'VIP'),
+    ensureRoom(boaViagem.id, 1, 'STANDARD'),
   ]);
 
   await Promise.all([
@@ -201,6 +318,9 @@ async function seed() {
     ensureSeats(moemaRoom.id, true),
     ensureSeats(copacabanaRoom.id, false),
     ensureSeats(botafogoRoom.id, false),
+    ensureSeats(savassiRoom.id, false),
+    ensureSeats(batelRoom.id, true),
+    ensureSeats(boaViagemRoom.id, false),
   ]);
 
   const seedMovies = await Promise.all(movies.map(ensureMovie));
@@ -213,9 +333,15 @@ async function seed() {
     futureSession(34, seedMovies[1].duration),
     futureSession(48, seedMovies[2].duration),
     futureSession(52, seedMovies[3].duration),
+    futureSession(58, seedMovies[0].duration),
+    futureSession(62, seedMovies[1].duration),
+    futureSession(66, seedMovies[2].duration),
+    futureSession(72, seedMovies[3].duration),
+    futureSession(76, seedMovies[0].duration),
+    futureSession(80, seedMovies[1].duration),
   ];
 
-  await Promise.all([
+  const seededSessions = await Promise.all([
     ensureSession({ movieId: seedMovies[0].id, roomId: standardRoom.id, price: '32.00', ...sessionTimes[0] }),
     ensureSession({ movieId: seedMovies[1].id, roomId: vipRoom.id, price: '46.00', ...sessionTimes[1] }),
     ensureSession({ movieId: seedMovies[2].id, roomId: pinheirosRoom.id, price: '29.00', ...sessionTimes[2] }),
@@ -224,6 +350,28 @@ async function seed() {
     ensureSession({ movieId: seedMovies[1].id, roomId: copacabanaRoom.id, price: '31.00', ...sessionTimes[5] }),
     ensureSession({ movieId: seedMovies[2].id, roomId: botafogoRoom.id, price: '33.00', ...sessionTimes[6] }),
     ensureSession({ movieId: seedMovies[3].id, roomId: vipRoom.id, price: '49.00', ...sessionTimes[7] }),
+    ensureSession({ movieId: seedMovies[0].id, roomId: savassiRoom.id, price: '30.00', ...sessionTimes[8] }),
+    ensureSession({ movieId: seedMovies[1].id, roomId: batelRoom.id, price: '47.00', ...sessionTimes[9] }),
+    ensureSession({ movieId: seedMovies[2].id, roomId: boaViagemRoom.id, price: '31.00', ...sessionTimes[10] }),
+    ensureSession({ movieId: seedMovies[3].id, roomId: pinheirosRoom.id, price: '29.00', ...sessionTimes[11] }),
+    ensureSession({ movieId: seedMovies[0].id, roomId: copacabanaRoom.id, price: '33.00', ...sessionTimes[12] }),
+    ensureSession({ movieId: seedMovies[1].id, roomId: standardRoom.id, price: '32.00', ...sessionTimes[13] }),
+  ]);
+
+  const paulistaSeats = await db.orm.public.Seat
+    .where({ roomId: standardRoom.id })
+    .all();
+
+  const firstDemoSeat = paulistaSeats.find((seat) => seat.row === 'B' && seat.number === 1);
+  const secondDemoSeat = paulistaSeats.find((seat) => seat.row === 'B' && seat.number === 2);
+
+  if (!firstDemoSeat || !secondDemoSeat) {
+    throw new Error('Não foi possível preparar assentos para as vendas de demonstração');
+  }
+
+  await Promise.all([
+    createDemoPaidOrder({ userId: customer.id, sessionId: seededSessions[0].id, seatId: firstDemoSeat.id, price: '32.00' }),
+    createDemoPaidOrder({ userId: secondCustomer.id, sessionId: seededSessions[0].id, seatId: secondDemoSeat.id, price: '32.00' }),
   ]);
 
   const existingAssignment = await db.orm.public.CinemaAdmin.where({
@@ -240,9 +388,10 @@ async function seed() {
 
   console.log('Seed concluída.');
   console.log('Cliente: cliente@cinevo.local / Cinevo#123');
+  console.log('Cliente adicional: marina@cinevo.local / Cinevo#123');
   console.log('Admin da plataforma: admin@cinevo.local / Cinevo#123');
   console.log('Admin do cinema: gerente@cinevo.local / Cinevo#123');
-  console.log(`Recursos: 5 cinemas (3 em São Paulo e 2 no Rio), 6 salas, ${seedMovies.length} filmes e 8 sessões.`);
+  console.log(`Recursos: 8 cinemas em 5 cidades, 9 salas, ${seedMovies.length} filmes, 14 sessões e 2 ingressos pagos.`);
   console.log(`Usuário de demonstração criado: ${customer.email}; admin: ${platformAdmin.email}.`);
 }
 
