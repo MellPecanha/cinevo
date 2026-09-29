@@ -1,0 +1,61 @@
+stages:
+  - verify
+  - test
+
+default:
+  image: node:24-bookworm
+  interruptible: true
+
+variables:
+  YARN_CACHE_FOLDER: "$CI_PROJECT_DIR/.yarn-cache"
+
+cache:
+  key:
+    files:
+      - backend/yarn.lock
+      - frontend/yarn.lock
+  paths:
+    - .yarn-cache/
+  policy: pull-push
+
+.yarn_job:
+  before_script:
+    - corepack enable
+
+frontend:verify:
+  stage: verify
+  extends: .yarn_job
+  script:
+    - cd frontend
+    - yarn install --immutable
+    - yarn lint
+    - yarn build
+
+backend:verify:
+  stage: verify
+  extends: .yarn_job
+  script:
+    - cd backend
+    - yarn install --immutable
+    - yarn contract:emit
+    - git diff --exit-code -- src/prisma/contract.json src/prisma/contract.d.ts
+    - yarn build
+
+backend:integration-tests:
+  stage: test
+  extends: .yarn_job
+  services:
+    - name: postgres:17-alpine
+      alias: postgres
+  variables:
+    POSTGRES_DB: cinevo_test
+    POSTGRES_USER: cinevo
+    POSTGRES_PASSWORD: cinevo
+    DATABASE_URL: postgresql://cinevo:cinevo@postgres:5432/cinevo_test
+    DATABASE_URL_TEST: postgresql://cinevo:cinevo@postgres:5432/cinevo_test
+    JWT_SECRET: cinevo-ci-test-secret
+  script:
+    - cd backend
+    - yarn install --immutable
+    - yarn prisma db update
+    - yarn test
