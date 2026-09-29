@@ -61,7 +61,7 @@ O serviço de expiração roda quando a API inicia, a cada minuto e antes de ope
 | Papel | Acesso principal |
 | --- | --- |
 | `CUSTOMER` | catálogo, sessões, assentos, pedidos, tickets, QR Code e cancelamento próprio |
-| `CINEMA_ADMIN` | salas, assentos, sessões e validação de tickets do cinema ao qual está vinculado |
+| `CINEMA_ADMIN` | salas, assentos, sessões, vendas com comprador e validação de tickets do cinema ao qual está vinculado |
 | `PLATFORM_ADMIN` | cinemas, filmes, usuários, vínculo de administradores e validação de qualquer ticket |
 
 Um administrador de cinema é vinculado por `CinemaAdmin`. A plataforma usa:
@@ -114,6 +114,9 @@ DELETE /favorites/:movieId
 
 ```http
 GET  /admin/dashboard                    # PLATFORM_ADMIN
+GET  /admin/cinemas                      # cinemas do gerente ou todos os cinemas para a plataforma
+GET  /admin/cinemas/:cinemaId/tickets    # CINEMA_ADMIN vinculado ou PLATFORM_ADMIN
+GET  /admin/cinemas/:cinemaId/metrics    # CINEMA_ADMIN vinculado ou PLATFORM_ADMIN
 POST /cinemas                         # PLATFORM_ADMIN
 POST /cinemas/:cinemaId/admins         # PLATFORM_ADMIN
 POST /movies                           # PLATFORM_ADMIN
@@ -122,17 +125,21 @@ POST /rooms                            # CINEMA_ADMIN vinculado ou PLATFORM_ADMI
 POST /rooms/:roomId/seats              # CINEMA_ADMIN vinculado ou PLATFORM_ADMIN
 POST /sessions                         # CINEMA_ADMIN vinculado ou PLATFORM_ADMIN
 POST /tickets/validate                 # CINEMA_ADMIN vinculado ou PLATFORM_ADMIN
+PATCH /movies/:id/deactivate           # PLATFORM_ADMIN
+PATCH /rooms/:roomId/deactivate        # CINEMA_ADMIN vinculado ou PLATFORM_ADMIN
+PATCH /sessions/:id/deactivate         # CINEMA_ADMIN vinculado ou PLATFORM_ADMIN
+PATCH /sessions/:id/cancel             # cancela os ingressos e pedidos da sessão
 ```
 
 ## Configuração local
 
-Suba a API e o PostgreSQL:
+Suba a aplicação completa, API e PostgreSQL:
 
 ```bash
 docker compose up -d
 ```
 
-A API ficará em `http://localhost:3333`. O container aplica atualizações aditivas do contrato Prisma antes de iniciar.
+A aplicação ficará em `http://localhost:8080` e a API em `http://localhost:3333`. O frontend usa um proxy interno para `/api`, então as rotas de compra, como `/filmes/:id`, `/checkout` e `/ingressos`, também funcionam ao recarregar a página. O container da API aplica atualizações aditivas do contrato Prisma antes de iniciar.
 
 Crie `backend/.env` a partir de `backend/.env.example`:
 
@@ -165,13 +172,16 @@ cd backend
 yarn seed
 ```
 
-A seed é segura para repetir no mesmo dia. Use uma destas contas no frontend ou na API:
+A seed limpa e recria todos os dados do banco configurado antes de inserir a demonstração. Use-a somente no banco de desenvolvimento. Ela recusa executar contra `cinevo_test`. Depois da execução, use uma destas contas no frontend ou na API:
 
 | Perfil | E-mail | Senha |
 | --- | --- | --- |
 | Cliente | `cliente@cinevo.local` | `Cinevo#123` |
+| Cliente com compra de demonstração | `marina@cinevo.local` | `Cinevo#123` |
 | Administrador da plataforma | `admin@cinevo.local` | `Cinevo#123` |
 | Administrador do Cinevo Paulista | `gerente@cinevo.local` | `Cinevo#123` |
+
+A seed também cria dois ingressos pagos na primeira sessão do Cinevo Paulista. Entre como `gerente@cinevo.local`, abra **Operação do cinema** e acesse a aba **Vendas** para conferir os compradores, assentos e status dos bilhetes.
 
 Se preferir executar a API fora do Docker, a API estará em `http://localhost:3333`.
 
@@ -232,13 +242,9 @@ A suíte é organizada por domínio em `backend/test` e cobre:
 - expiração de hold e liberação do assento;
 - validação única de ingresso por administrador vinculado ao cinema.
 
-## Integração contínua
-
-O workflow [CI](.github/workflows/ci.yml) executa em pushes para `main` e em pull requests. Ele sobe um PostgreSQL efêmero, aplica o contrato no banco de testes, valida o TypeScript, executa os testes de integração e constrói o frontend.
-
 ## Próximos passos
 
-- documentação OpenAPI e tratamento centralizado de erros;
-- dashboard administrativo e métricas de venda;
-- favoritos persistentes e preferências de cliente;
-- deploy em ambiente público.
+- configurar CI no GitLab quando o repositório for migrado;
+- paginação no backend para catálogos muito grandes;
+- leitura de QR Code pela câmera, usando a API de câmera do navegador;
+- deploy em ambiente público com variáveis de ambiente de produção.

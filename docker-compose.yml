@@ -28,10 +28,20 @@ services:
     environment:
       DATABASE_URL: postgresql://cinevo:cinevo@postgres:5432/cinevo
       JWT_SECRET: cinevo-development-secret-change-me
-      FRONTEND_ORIGIN: http://localhost:5173
+      FRONTEND_ORIGIN: http://localhost:5173,http://localhost:8080
       PORT: 3333
     ports:
       - "3333:3333"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: cinevo-frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
 
 volumes:
   cinevo_postgres_data:
