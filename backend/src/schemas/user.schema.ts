@@ -27,3 +27,9 @@ export const createUserSchema = z.object({
 });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
+
+export const updateUserRoleSchema = z.object({
+  role: z.enum(['CUSTOMER', 'CINEMA_ADMIN', 'PLATFORM_ADMIN']),
+});
+
+export type UpdateUserRoleInput = z.infer<typeof updateUserRoleSchema>;

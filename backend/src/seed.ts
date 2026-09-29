@@ -152,7 +152,7 @@ async function seed() {
     throw new Error('Não foi possível criar os usuários de demonstração');
   }
 
-  const [paulista, pinheiros] = await Promise.all([
+  const [paulista, pinheiros, moema, copacabana, botafogo] = await Promise.all([
     ensureCinema({
       name: 'Cinevo Paulista',
       address: 'Av. Paulista, 1000',
@@ -165,18 +165,42 @@ async function seed() {
       city: 'São Paulo',
       state: 'SP',
     }),
+    ensureCinema({
+      name: 'Cinevo Moema',
+      address: 'Av. Ibirapuera, 2100',
+      city: 'São Paulo',
+      state: 'SP',
+    }),
+    ensureCinema({
+      name: 'Cinevo Copacabana',
+      address: 'Av. Nossa Senhora de Copacabana, 680',
+      city: 'Rio de Janeiro',
+      state: 'RJ',
+    }),
+    ensureCinema({
+      name: 'Cinevo Botafogo',
+      address: 'Rua Voluntários da Pátria, 120',
+      city: 'Rio de Janeiro',
+      state: 'RJ',
+    }),
   ]);
 
-  const [standardRoom, vipRoom, pinheirosRoom] = await Promise.all([
+  const [standardRoom, vipRoom, pinheirosRoom, moemaRoom, copacabanaRoom, botafogoRoom] = await Promise.all([
     ensureRoom(paulista.id, 1, 'STANDARD'),
     ensureRoom(paulista.id, 2, 'VIP'),
     ensureRoom(pinheiros.id, 1, 'STANDARD'),
+    ensureRoom(moema.id, 3, 'VIP'),
+    ensureRoom(copacabana.id, 1, 'STANDARD'),
+    ensureRoom(botafogo.id, 2, 'STANDARD'),
   ]);
 
   await Promise.all([
     ensureSeats(standardRoom.id, false),
     ensureSeats(vipRoom.id, true),
     ensureSeats(pinheirosRoom.id, false),
+    ensureSeats(moemaRoom.id, true),
+    ensureSeats(copacabanaRoom.id, false),
+    ensureSeats(botafogoRoom.id, false),
   ]);
 
   const seedMovies = await Promise.all(movies.map(ensureMovie));
@@ -185,6 +209,10 @@ async function seed() {
     futureSession(7, seedMovies[1].duration),
     futureSession(24, seedMovies[2].duration),
     futureSession(27, seedMovies[3].duration),
+    futureSession(30, seedMovies[0].duration),
+    futureSession(34, seedMovies[1].duration),
+    futureSession(48, seedMovies[2].duration),
+    futureSession(52, seedMovies[3].duration),
   ];
 
   await Promise.all([
@@ -192,6 +220,10 @@ async function seed() {
     ensureSession({ movieId: seedMovies[1].id, roomId: vipRoom.id, price: '46.00', ...sessionTimes[1] }),
     ensureSession({ movieId: seedMovies[2].id, roomId: pinheirosRoom.id, price: '29.00', ...sessionTimes[2] }),
     ensureSession({ movieId: seedMovies[3].id, roomId: standardRoom.id, price: '34.00', ...sessionTimes[3] }),
+    ensureSession({ movieId: seedMovies[0].id, roomId: moemaRoom.id, price: '48.00', ...sessionTimes[4] }),
+    ensureSession({ movieId: seedMovies[1].id, roomId: copacabanaRoom.id, price: '31.00', ...sessionTimes[5] }),
+    ensureSession({ movieId: seedMovies[2].id, roomId: botafogoRoom.id, price: '33.00', ...sessionTimes[6] }),
+    ensureSession({ movieId: seedMovies[3].id, roomId: vipRoom.id, price: '49.00', ...sessionTimes[7] }),
   ]);
 
   const existingAssignment = await db.orm.public.CinemaAdmin.where({
@@ -210,7 +242,7 @@ async function seed() {
   console.log('Cliente: cliente@cinevo.local / Cinevo#123');
   console.log('Admin da plataforma: admin@cinevo.local / Cinevo#123');
   console.log('Admin do cinema: gerente@cinevo.local / Cinevo#123');
-  console.log(`Recursos: 2 cinemas, 3 salas, ${seedMovies.length} filmes e 4 sessões.`);
+  console.log(`Recursos: 5 cinemas (3 em São Paulo e 2 no Rio), 6 salas, ${seedMovies.length} filmes e 8 sessões.`);
   console.log(`Usuário de demonstração criado: ${customer.email}; admin: ${platformAdmin.email}.`);
 }
 

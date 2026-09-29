@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import {
   getUsers,
+  patchUserRole,
   postUser,
 } from '../controllers/user.controller.js';
 
@@ -11,6 +12,7 @@ import { authorize } from '../middlewares/authorize.js';
 
 import {
   createUserSchema,
+  updateUserRoleSchema,
 } from '../schemas/user.schema.js';
 
 export const userRoutes = Router();
@@ -27,3 +29,5 @@ userRoutes.post(
   validate(createUserSchema),
   postUser,
 );
+
+userRoutes.patch('/users/:id/role', authenticate, authorize('PLATFORM_ADMIN'), validate(updateUserRoleSchema), patchUserRole);

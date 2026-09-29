@@ -216,13 +216,15 @@ Os testes de integração usam um banco isolado chamado `cinevo_test`. Crie-o um
 docker exec cinevo-postgres createdb -U cinevo cinevo_test
 ```
 
-Depois aplique o contrato e execute a suíte:
+Copie `backend/.env.test.example` para `backend/.env.test` e ajuste a URL se o banco não estiver na porta local `5433`. Depois aplique o contrato e execute a suíte:
 
 ```bash
 cd backend
 DATABASE_URL="postgresql://cinevo:cinevo@localhost:5433/cinevo_test" yarn prisma db update
-DATABASE_URL_TEST="postgresql://cinevo:cinevo@localhost:5433/cinevo_test" yarn test
+yarn test
 ```
+
+`yarn test` recusa executar sem `DATABASE_URL_TEST`, evitando alterações acidentais no banco de desenvolvimento.
 
 A suíte é organizada por domínio em `backend/test` e cobre:
 
