@@ -73,6 +73,21 @@ export async function authorizeCinemaFromBody(
   await authorizeCinemaAccess(req, res, next, cinemaId);
 }
 
+export async function authorizeCinemaFromCinemaParam(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const cinemaId = getPositiveInteger(req.params.cinemaId);
+
+  if (!cinemaId) {
+    res.status(400).json({ message: 'Cinema inválido' });
+    return;
+  }
+
+  await authorizeCinemaAccess(req, res, next, cinemaId);
+}
+
 export async function authorizeCinemaFromRoomParam(
   req: Request,
   res: Response,
@@ -99,6 +114,31 @@ export async function authorizeCinemaFromRoomParam(
   }
 
   await authorizeCinemaAccess(req, res, next, room.cinemaId);
+}
+
+export async function authorizeCinemaFromSessionParam(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const sessionId = getPositiveInteger(req.params.id);
+
+  if (!sessionId) {
+    res.status(400).json({ message: 'Sessão inválida' });
+    return;
+  }
+
+  const session = await db.orm.public.Session
+    .include('room')
+    .where({ id: sessionId })
+    .first();
+
+  if (!session) {
+    res.status(404).json({ message: 'Sessão não encontrada' });
+    return;
+  }
+
+  await authorizeCinemaAccess(req, res, next, session.room.cinemaId);
 }
 
 export async function authorizeCinemaFromSessionBody(

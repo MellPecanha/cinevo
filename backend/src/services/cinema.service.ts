@@ -13,3 +13,17 @@ export async function createCinema(data: CreateCinemaDTO) {
     state: data.state,
   });
 }
+
+export async function listManageableCinemas(
+  userId: number,
+  role: 'CINEMA_ADMIN' | 'PLATFORM_ADMIN',
+) {
+  if (role === 'PLATFORM_ADMIN') return listCinemas();
+
+  const assignments = await db.orm.public.CinemaAdmin
+    .include('cinema')
+    .where({ userId })
+    .all();
+
+  return assignments.map((assignment) => assignment.cinema);
+}

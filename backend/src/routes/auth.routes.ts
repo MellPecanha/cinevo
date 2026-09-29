@@ -6,6 +6,7 @@ import {
 } from '../controllers/auth.controller.js';
 
 import { validate } from '../middlewares/validate.js';
+import { loginRateLimit } from '../middlewares/rate-limit.js';
 import { authenticate } from '../middlewares/authenticate.js';
 
 import {
@@ -22,6 +23,7 @@ authRoutes.get(
 
 authRoutes.post(
   '/auth/login',
+  loginRateLimit,
   validate(loginSchema),
   postLogin,
 );

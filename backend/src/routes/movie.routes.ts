@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import {
   getMovies,
+  patchDeactivateMovie,
   postMovie,
 } from '../controllers/movie.controller.js';
 
@@ -21,3 +22,5 @@ movieRoutes.post(
   validate(createMovieSchema),
   postMovie,
 );
+
+movieRoutes.patch('/movies/:id/deactivate', authenticate, authorize('PLATFORM_ADMIN'), patchDeactivateMovie);

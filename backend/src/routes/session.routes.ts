@@ -2,6 +2,8 @@ import { Router } from 'express';
 
 import {
   getSession,
+  patchDeactivateSession,
+  patchCancelSession,
   getSessions,
   postSession,
 } from '../controllers/session.controller.js';
@@ -9,6 +11,7 @@ import {
 import { validate } from '../middlewares/validate.js';
 import { authenticate } from '../middlewares/authenticate.js';
 import { authorizeCinemaFromSessionBody } from '../middlewares/cinema-access.js';
+import { authorizeCinemaFromSessionParam } from '../middlewares/cinema-access.js';
 
 import {
   createSessionSchema,
@@ -33,3 +36,6 @@ sessionRoutes.post(
   authorizeCinemaFromSessionBody,
   postSession,
 );
+
+sessionRoutes.patch('/sessions/:id/deactivate', authenticate, authorizeCinemaFromSessionParam, patchDeactivateSession);
+sessionRoutes.patch('/sessions/:id/cancel', authenticate, authorizeCinemaFromSessionParam, patchCancelSession);

@@ -5,7 +5,13 @@ import type {
   Response,
 } from 'express';
 
+import { AppError } from '../errors/app-error.js';
+
 function getPublicError(error: unknown) {
+  if (error instanceof AppError) {
+    return { status: error.statusCode, message: error.message };
+  }
+
   if (error instanceof Error) {
     if (error.message === 'E-mail ou senha inválidos') {
       return { status: 401, message: error.message };

@@ -20,6 +20,14 @@ export async function generateSeats(
   roomId: number,
   data: GenerateSeatsDTO,
 ) {
+  const room = await db.orm.public.Room
+    .where({ id: roomId })
+    .first();
+
+  if (!room) {
+    throw new Error('Sala não encontrada');
+  }
+
   const existingSeats = await db.orm.public.Seat
     .where({ roomId })
     .all();
@@ -49,7 +57,9 @@ export async function generateSeats(
 
       const type: SeatType = data.accessibleSeats.includes(seatCode)
         ? 'ACCESSIBLE'
-        : 'STANDARD';
+        : room.type === 'VIP' || data.vipSeats.includes(seatCode)
+          ? 'VIP'
+          : 'STANDARD';
 
       seats.push({
         row,

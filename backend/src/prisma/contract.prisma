@@ -89,6 +89,7 @@ model Room {
   id        Int                        @id @default(autoincrement())
   number    Int
   type      RoomType
+  isActive  Boolean                    @default(true)
 
   cinema    Cinema                     @relation(fields:[cinemaId], references:[id])
   cinemaId  Int
@@ -128,6 +129,7 @@ model Movie {
   classification Classification
   coverUrl       String?
   trailerUrl     String?
+  isActive       Boolean                    @default(true)
 
   sessions       Session[]
   favorites      Favorite[]
@@ -161,6 +163,7 @@ model Session {
   startsAt  TimestamptzString
   endsAt    TimestamptzString
   price     Decimal                    @default("0")
+  isActive  Boolean                    @default(true)
 
   tickets   Ticket[]
   holds     SeatHold[]

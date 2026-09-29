@@ -34,7 +34,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'2dae0fc28d83fdb75a6c519b2da8c7a30159cfdef1c4a4ea9840b5604a65344c'>;
+  StorageHashBase<'e7ffa6eebbe88f9f29ce3c1d3ad9e717e5029a47e9569ab9348dd9c21db09d4e'>;
 export type ExecutionHash =
   ExecutionHashBase<'100e17e751b03462bd442944dc00d6c6a95a7e98da33d2ee0c8929467edb3210'>;
 export type ProfileHash =
@@ -269,6 +269,7 @@ export type FieldOutputTypes = {
       readonly classification: 'L' | 'AGE_10' | 'AGE_12' | 'AGE_14' | 'AGE_16' | 'AGE_18';
       readonly coverUrl: CodecTypes['pg/text@1']['output'] | null;
       readonly trailerUrl: CodecTypes['pg/text@1']['output'] | null;
+      readonly isActive: CodecTypes['pg/bool@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
@@ -284,6 +285,7 @@ export type FieldOutputTypes = {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly number: CodecTypes['pg/int4@1']['output'];
       readonly type: 'STANDARD' | 'VIP';
+      readonly isActive: CodecTypes['pg/bool@1']['output'];
       readonly cinemaId: CodecTypes['pg/int4@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -314,6 +316,7 @@ export type FieldOutputTypes = {
       readonly startsAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly endsAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly price: CodecTypes['pg/numeric@1']['output'];
+      readonly isActive: CodecTypes['pg/bool@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
@@ -371,6 +374,7 @@ export type FieldInputTypes = {
       readonly classification: 'L' | 'AGE_10' | 'AGE_12' | 'AGE_14' | 'AGE_16' | 'AGE_18';
       readonly coverUrl: CodecTypes['pg/text@1']['input'] | null;
       readonly trailerUrl: CodecTypes['pg/text@1']['input'] | null;
+      readonly isActive: CodecTypes['pg/bool@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
@@ -386,6 +390,7 @@ export type FieldInputTypes = {
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly number: CodecTypes['pg/int4@1']['input'];
       readonly type: 'STANDARD' | 'VIP';
+      readonly isActive: CodecTypes['pg/bool@1']['input'];
       readonly cinemaId: CodecTypes['pg/int4@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -416,6 +421,7 @@ export type FieldInputTypes = {
       readonly startsAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly endsAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly price: CodecTypes['pg/numeric@1']['input'];
+      readonly isActive: CodecTypes['pg/bool@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
@@ -472,6 +478,7 @@ export type StorageColumnTypes = {
       readonly description: CodecTypes['pg/text@1']['output'] | null;
       readonly duration: CodecTypes['pg/int4@1']['output'];
       readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly isActive: CodecTypes['pg/bool@1']['output'];
       readonly title: CodecTypes['pg/text@1']['output'];
       readonly trailerUrl: CodecTypes['pg/text@1']['output'] | null;
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -488,6 +495,7 @@ export type StorageColumnTypes = {
       readonly cinemaId: CodecTypes['pg/int4@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly isActive: CodecTypes['pg/bool@1']['output'];
       readonly number: CodecTypes['pg/int4@1']['output'];
       readonly type: 'STANDARD' | 'VIP';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -515,6 +523,7 @@ export type StorageColumnTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly endsAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly isActive: CodecTypes['pg/bool@1']['output'];
       readonly movieId: CodecTypes['pg/int4@1']['output'];
       readonly price: CodecTypes['pg/numeric@1']['output'];
       readonly roomId: CodecTypes['pg/int4@1']['output'];
@@ -574,6 +583,7 @@ export type StorageColumnInputTypes = {
       readonly description: CodecTypes['pg/text@1']['input'] | null;
       readonly duration: CodecTypes['pg/int4@1']['input'];
       readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly isActive: CodecTypes['pg/bool@1']['input'];
       readonly title: CodecTypes['pg/text@1']['input'];
       readonly trailerUrl: CodecTypes['pg/text@1']['input'] | null;
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -590,6 +600,7 @@ export type StorageColumnInputTypes = {
       readonly cinemaId: CodecTypes['pg/int4@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly isActive: CodecTypes['pg/bool@1']['input'];
       readonly number: CodecTypes['pg/int4@1']['input'];
       readonly type: 'STANDARD' | 'VIP';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -617,6 +628,7 @@ export type StorageColumnInputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly endsAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly isActive: CodecTypes['pg/bool@1']['input'];
       readonly movieId: CodecTypes['pg/int4@1']['input'];
       readonly price: CodecTypes['pg/numeric@1']['input'];
       readonly roomId: CodecTypes['pg/int4@1']['input'];
@@ -688,6 +700,7 @@ export namespace Models {
     id: CodecTypes['pg/int4@1']['output'];
     number: CodecTypes['pg/int4@1']['output'];
     type: 'STANDARD' | 'VIP';
+    isActive: CodecTypes['pg/bool@1']['output'];
     cinemaId: CodecTypes['pg/int4@1']['output'];
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -717,6 +730,7 @@ export namespace Models {
     classification: 'L' | 'AGE_10' | 'AGE_12' | 'AGE_14' | 'AGE_16' | 'AGE_18';
     coverUrl: CodecTypes['pg/text@1']['output'] | null;
     trailerUrl: CodecTypes['pg/text@1']['output'] | null;
+    isActive: CodecTypes['pg/bool@1']['output'];
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     favorites: public_Favorite[];
@@ -738,6 +752,7 @@ export namespace Models {
     startsAt: CodecTypes['pg/timestamptz-string@1']['output'];
     endsAt: CodecTypes['pg/timestamptz-string@1']['output'];
     price: CodecTypes['pg/numeric@1']['output'];
+    isActive: CodecTypes['pg/bool@1']['output'];
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     holds: public_SeatHold[];
@@ -1038,6 +1053,15 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
+                readonly isActive: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                };
                 readonly createdAt: {
                   readonly nativeType: 'timestamptz';
                   readonly codecId: 'pg/timestamptz-string@1';
@@ -1142,6 +1166,15 @@ type ContractBase = Omit<
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
+                };
+                readonly isActive: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
                 };
                 readonly cinemaId: {
                   readonly nativeType: 'int4';
@@ -1414,6 +1447,15 @@ type ContractBase = Omit<
                   readonly default: {
                     readonly kind: 'literal';
                     readonly value: DefaultLiteralValue<'pg/numeric@1', '0'>;
+                  };
+                };
+                readonly isActive: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
                   };
                 };
                 readonly createdAt: {
@@ -1939,6 +1981,10 @@ type ContractBase = Omit<
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly isActive: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
               readonly createdAt: {
                 readonly nullable: false;
                 readonly type: {
@@ -1989,6 +2035,7 @@ type ContractBase = Omit<
                 readonly classification: { readonly column: 'classification' };
                 readonly coverUrl: { readonly column: 'coverUrl' };
                 readonly trailerUrl: { readonly column: 'trailerUrl' };
+                readonly isActive: { readonly column: 'isActive' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };
@@ -2087,6 +2134,10 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly isActive: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
               readonly cinemaId: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
@@ -2146,6 +2197,7 @@ type ContractBase = Omit<
                 readonly id: { readonly column: 'id' };
                 readonly number: { readonly column: 'number' };
                 readonly type: { readonly column: 'type' };
+                readonly isActive: { readonly column: 'isActive' };
                 readonly cinemaId: { readonly column: 'cinemaId' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
@@ -2359,6 +2411,10 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/numeric@1' };
               };
+              readonly isActive: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
               readonly createdAt: {
                 readonly nullable: false;
                 readonly type: {
@@ -2429,6 +2485,7 @@ type ContractBase = Omit<
                 readonly startsAt: { readonly column: 'startsAt' };
                 readonly endsAt: { readonly column: 'endsAt' };
                 readonly price: { readonly column: 'price' };
+                readonly isActive: { readonly column: 'isActive' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };

@@ -12,6 +12,7 @@ import { ticketRoutes } from './routes/ticket.routes.js';
 import { favoriteRoutes } from './routes/favorite.routes.js';
 import { errorHandler } from './middlewares/error-handler.js';
 import { dashboardRoutes } from './routes/dashboard.routes.js';
+import { db } from './prisma/db.js';
 
 
 export const app = express();
@@ -41,10 +42,13 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-app.get('/health', (_req, res) => {
-  res.json({
-    status: 'ok',
-  });
+app.get('/health', async (_req, res) => {
+  try {
+    await db.orm.public.Movie.all();
+    res.json({ status: 'ok', database: 'ok', uptimeSeconds: Math.round(process.uptime()) });
+  } catch {
+    res.status(503).json({ status: 'degraded', database: 'unavailable' });
+  }
 });
 
 app.use(movieRoutes);

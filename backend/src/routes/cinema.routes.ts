@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import {
   getCinemas,
+  getManageableCinemas,
   postCinemaAdmin,
   postCinema,
 } from '../controllers/cinema.controller.js';
@@ -15,6 +16,13 @@ import { createCinemaSchema } from '../schemas/cinema.schema.js';
 export const cinemaRoutes = Router();
 
 cinemaRoutes.get('/cinemas', getCinemas);
+
+cinemaRoutes.get(
+  '/admin/cinemas',
+  authenticate,
+  authorize('CINEMA_ADMIN', 'PLATFORM_ADMIN'),
+  getManageableCinemas,
+);
 
 cinemaRoutes.post(
   '/cinemas',

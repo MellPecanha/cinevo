@@ -5,9 +5,13 @@ import { expireSeatHolds } from './services/seat-hold.service.js';
 const PORT = Number(process.env.PORT ?? 3333);
 const HOLD_EXPIRATION_INTERVAL_MS = 60 * 1000;
 
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 16) {
+  throw new Error('JWT_SECRET deve estar configurado e ter ao menos 16 caracteres');
+}
+
 function runSeatHoldExpiration() {
   void expireSeatHolds().catch((error) => {
-    console.error('Não foi possível expirar as reservas de assento', error);
+    console.error(JSON.stringify({ level: 'error', event: 'seat_hold_expiration_failed', error: error instanceof Error ? error.message : 'unknown' }));
   });
 }
 
@@ -21,5 +25,5 @@ const expirationTimer = setInterval(
 expirationTimer.unref();
 
 app.listen(PORT, () => {
-  console.log(`Cinevo API running on http://localhost:${PORT}`);
+  console.log(JSON.stringify({ level: 'info', event: 'api_started', port: PORT, environment: process.env.NODE_ENV ?? 'development' }));
 });

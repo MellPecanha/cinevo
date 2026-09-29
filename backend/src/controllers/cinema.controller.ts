@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 
 import {
   createCinema,
+  listManageableCinemas,
   listCinemas,
 } from '../services/cinema.service.js';
 import { assignCinemaAdmin } from '../services/cinema-admin.service.js';
@@ -13,6 +14,18 @@ export async function getCinemas(
   const cinemas = await listCinemas();
 
   res.json(cinemas);
+}
+
+export async function getManageableCinemas(
+  req: Request,
+  res: Response,
+) {
+  if (!req.user || (req.user.role !== 'CINEMA_ADMIN' && req.user.role !== 'PLATFORM_ADMIN')) {
+    res.status(403).json({ message: 'Usuário não possui permissão para esta operação' });
+    return;
+  }
+
+  res.json(await listManageableCinemas(req.user.sub, req.user.role));
 }
 
 export async function postCinema(

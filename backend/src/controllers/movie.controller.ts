@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import {
   createMovie,
+  deactivateMovie,
   listMovies,
 } from '../services/movie.service.js';
 
@@ -11,6 +12,21 @@ export async function getMovies(
   const movies = await listMovies();
 
   res.json(movies);
+}
+
+export async function patchDeactivateMovie(req: Request, res: Response) {
+  const movieId = Number(req.params.id);
+
+  if (!Number.isSafeInteger(movieId) || movieId <= 0) {
+    res.status(400).json({ message: 'Filme inválido' });
+    return;
+  }
+
+  try {
+    res.json(await deactivateMovie(movieId));
+  } catch (error) {
+    res.status(404).json({ message: error instanceof Error ? error.message : 'Filme não encontrado' });
+  }
 }
 
 export async function postMovie(
