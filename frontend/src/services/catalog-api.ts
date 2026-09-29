@@ -47,10 +47,13 @@ export type ApiSeat = {
   status: 'AVAILABLE' | 'HELD' | 'SOLD'
 }
 
+export type TicketType = 'FULL' | 'HALF'
+
 export type ApiTicket = {
   id: number
   orderId: number
   code: string
+  type: TicketType
   price: string
   status: 'ACTIVE' | 'USED' | 'CANCELLED'
   seat: { row: string; number: number }
@@ -59,6 +62,25 @@ export type ApiTicket = {
     movie: { title: string }
     room: { number: number; cinema: { name: string; city: string } }
   }
+}
+
+export type CinemaTicketSale = {
+  id: number
+  code: string
+  status: ApiTicket['status']
+  type: TicketType
+  price: string
+  seat: { row: string; number: number }
+  buyer: { name: string; email: string }
+  session: { startsAt: string; movie: { title: string }; room: { number: number } }
+}
+
+export type CinemaSalesMetrics = {
+  ticketsSold: number
+  activeTickets: number
+  revenue: string
+  occupancy: number
+  upcomingSessions: number
 }
 
 export type ApiFavorite = {
@@ -90,6 +112,8 @@ export type CreateMovieInput = {
   description?: string
   duration: number
   classification: ApiMovie['classification']
+  coverUrl?: string
+  trailerUrl?: string
 }
 
 export type CreateCinemaInput = {
@@ -137,6 +161,18 @@ export function fetchCinemas() {
   return fetchCatalogResource<ApiCinema[]>('/cinemas')
 }
 
+export function fetchManageableCinemas(token: string) {
+  return fetchAuthenticatedResource<ApiCinema[]>('/admin/cinemas', token)
+}
+
+export function fetchCinemaTicketSales(token: string, cinemaId: number) {
+  return fetchAuthenticatedResource<CinemaTicketSale[]>(`/admin/cinemas/${cinemaId}/tickets`, token)
+}
+
+export function fetchCinemaSalesMetrics(token: string, cinemaId: number) {
+  return fetchAuthenticatedResource<CinemaSalesMetrics>(`/admin/cinemas/${cinemaId}/metrics`, token)
+}
+
 export function fetchSessions() {
   return fetchCatalogResource<ApiSession[]>('/sessions')
 }
@@ -173,10 +209,10 @@ export function registerCustomer(name: string, email: string, password: string) 
   return postCatalogResource<{ id: number }>('/users', { name, email, password })
 }
 
-export function createOrder(token: string, sessionId: number, seatIds: number[]) {
+export function createOrder(token: string, sessionId: number, tickets: Array<{ seatId: number; type: TicketType }>) {
   return postCatalogResource<{ id: number; total: string; expiresAt: string }>('/orders', {
     sessionId,
-    tickets: seatIds.map((seatId) => ({ seatId, type: 'FULL' })),
+    tickets,
   }, token)
 }
 
@@ -190,6 +226,10 @@ export function fetchTickets(token: string) {
 
 export function fetchTicketQrCode(token: string, code: string) {
   return fetchAuthenticatedResource<{ qrCodeDataUrl: string }>(`/tickets/${encodeURIComponent(code)}/qrcode`, token)
+}
+
+export function validateTicket(token: string, code: string) {
+  return postCatalogResource<{ status: 'ACTIVE' | 'USED' | 'CANCELLED'; usedAt: string | null }>('/tickets/validate', { code }, token)
 }
 
 export function fetchCurrentUser(token: string) {
@@ -236,12 +276,12 @@ export function createRoom(token: string, data: { cinemaId: number; number: numb
   return postCatalogResource<ApiRoom>('/rooms', data, token)
 }
 
-export function generateSeats(token: string, roomId: number, data: { rows: number; seatsPerRow: number; accessibleSeats: string[] }) {
+export function generateSeats(token: string, roomId: number, data: { rows: number; seatsPerRow: number; accessibleSeats: string[]; vipSeats: string[] }) {
   return postCatalogResource<ApiSeat[]>(`/rooms/${roomId}/seats`, data, token)
 }
 
-export function createSession(token: string, data: { movieId: number; roomId: number; startsAt: string; endsAt: string; price: number }) {
-  return postCatalogResource<ApiSession>('/sessions', data, token)
+export function createSession(token: string, data: { movieId: number; roomId: number; startsAt: string; price: number; recurrenceDays?: number[]; recurrenceUntil?: string }) {
+  return postCatalogResource<{ sessions: ApiSession[] }>('/sessions', data, token)
 }
 
 export function fetchUsers(token: string) {

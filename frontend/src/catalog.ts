@@ -10,6 +10,8 @@ export type Movie = {
   tone: string
   status: 'Em cartaz' | 'Em breve'
   release?: string
+  coverUrl?: string | null
+  trailerUrl?: string | null
 }
 
 export const showcaseMovies: Movie[] = [
@@ -35,6 +37,8 @@ export function mapApiMovie(movie: ApiMovie, index: number): Movie {
     duration: `${Math.floor(movie.duration / 60)}h ${String(movie.duration % 60).padStart(2, '0')}min`,
     classification: classificationLabels[movie.classification],
     status: 'Em cartaz',
+    coverUrl: movie.coverUrl,
+    trailerUrl: movie.trailerUrl,
   }
 }
 

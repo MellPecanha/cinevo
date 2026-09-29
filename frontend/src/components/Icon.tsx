@@ -1,4 +1,4 @@
-export type IconName = 'search' | 'ticket' | 'heart' | 'user' | 'play' | 'pin' | 'arrow'
+export type IconName = 'search' | 'ticket' | 'heart' | 'user' | 'play' | 'pin' | 'arrow' | 'moon' | 'sun'
 
 export function Icon({ name }: { name: IconName }) {
   const common = {
@@ -19,6 +19,8 @@ export function Icon({ name }: { name: IconName }) {
   if (name === 'user') return <svg {...common}><circle cx="12" cy="8" r="3.25" /><path d="M5.5 20a6.5 6.5 0 0 1 13 0" /></svg>
   if (name === 'play') return <svg {...common}><path d="m9 7 8 5-8 5Z" fill="currentColor" /></svg>
   if (name === 'pin') return <svg {...common}><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></svg>
+  if (name === 'moon') return <svg {...common}><path d="M20.5 15.2A8.7 8.7 0 0 1 8.8 3.5 8.7 8.7 0 1 0 20.5 15.2Z" /></svg>
+  if (name === 'sun') return <svg {...common}><circle cx="12" cy="12" r="3.6" /><path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" /></svg>
 
   return <svg {...common}><path d="M5 12h14" /><path d="m13 6 6 6-6 6" /></svg>
 }

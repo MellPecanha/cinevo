@@ -29,6 +29,16 @@ Ao reservar, use a conta de demonstração `cliente@cinevo.local` com a senha `C
 
 ## Ambiente de produção
 
+O Dockerfile entrega o build estático com Nginx. O Nginx encaminha `/api` para o serviço `api` do Docker Compose e devolve `index.html` para as rotas do cliente, permitindo acessar diretamente URLs como `/filmes/1` ou `/ingressos`.
+
+Para subir a aplicação completa pelo repositório raiz:
+
+```bash
+docker compose up -d --build
+```
+
+O frontend ficará em `http://localhost:8080`.
+
 Crie `.env` com a URL pública da API:
 
 ```env
