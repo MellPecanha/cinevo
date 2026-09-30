@@ -1,6 +1,8 @@
 stages:
-  - verify
+  - quality
   - test
+  - build
+  - deploy
 
 default:
   image: node:24-bookworm
@@ -24,17 +26,16 @@ cache:
   before_script:
     - corepack enable
 
-frontend:verify:
-  stage: verify
+frontend:lint:
+  stage: quality
   extends: .yarn_job
   script:
     - cd frontend
     - yarn install --immutable
     - yarn lint
-    - yarn build
 
-backend:verify:
-  stage: verify
+backend:quality:
+  stage: quality
   extends: .yarn_job
   script:
     - cd backend
@@ -61,3 +62,27 @@ backend:integration-tests:
     - yarn install --immutable
     - yarn prisma db update
     - yarn test
+
+frontend:build:
+  stage: build
+  extends: .yarn_job
+  script:
+    - cd frontend
+    - yarn install --immutable
+    - yarn build
+  artifacts:
+    paths:
+      - frontend/dist/
+    expire_in: 1 week
+
+deploy:production:
+  image: docker:27-cli
+  stage: deploy
+  before_script: []
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+  script:
+    - docker compose -p cinevo -f docker-compose.yml config
+    - docker compose -p cinevo -f docker-compose.yml up -d --build --remove-orphans
+    - docker compose -p cinevo -f docker-compose.yml ps
+    - docker compose -p cinevo -f docker-compose.yml logs api frontend --tail=100
