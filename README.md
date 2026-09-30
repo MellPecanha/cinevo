@@ -139,7 +139,7 @@ Suba a aplicação completa, API e PostgreSQL:
 docker compose up -d
 ```
 
-A aplicação ficará em `http://localhost:8081` e a API em `http://localhost:3333`. O frontend usa um proxy interno para `/api`, então as rotas de compra, como `/filmes/:id`, `/checkout` e `/ingressos`, também funcionam ao recarregar a página. O container da API aplica atualizações aditivas do contrato Prisma antes de iniciar. Defina `FRONTEND_PORT` para escolher outra porta.
+A aplicação ficará em `http://localhost:8081` e a API em `http://localhost:3334`. O frontend usa um proxy interno para `/api`, então as rotas de compra, como `/filmes/:id`, `/checkout` e `/ingressos`, também funcionam ao recarregar a página. O container da API aplica atualizações aditivas do contrato Prisma antes de iniciar. Defina `FRONTEND_PORT` ou `API_PORT` para escolher outras portas expostas.
 
 Crie `backend/.env` a partir de `backend/.env.example`:
 
@@ -183,7 +183,7 @@ A seed limpa e recria todos os dados do banco configurado antes de inserir a dem
 
 A seed também cria dois ingressos pagos na primeira sessão do Cinevo Paulista. Entre como `gerente@cinevo.local`, abra **Operação do cinema** e acesse a aba **Vendas** para conferir os compradores, assentos e status dos bilhetes.
 
-Se preferir executar a API fora do Docker, a API estará em `http://localhost:3333`.
+Se preferir executar a API fora do Docker, ela estará em `http://localhost:3333`.
 
 ## Frontend
 

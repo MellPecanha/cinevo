@@ -6,7 +6,7 @@ Interface React do Cinevo para descoberta pública de filmes, escolha de sessão
 
 - Node.js 24
 - Yarn 4
-- API do Cinevo em `http://localhost:3333`
+- API do Cinevo em `http://localhost:3334` quando executada pelo Docker Compose
 
 ## Desenvolvimento local
 
@@ -37,7 +37,7 @@ Para subir a aplicação completa pelo repositório raiz:
 docker compose up -d --build
 ```
 
-O frontend ficará em `http://localhost:8080`.
+O frontend ficará em `http://localhost:8081`.
 
 Crie `.env` com a URL pública da API:
 
