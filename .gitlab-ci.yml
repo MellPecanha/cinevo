@@ -60,8 +60,8 @@ backend:integration-tests:
   script:
     - cd backend
     - yarn install --immutable
-    - DATABASE_URL=postgresql://cinevo:cinevo@postgres:5432/cinevo_test yarn prisma db update
-    - DATABASE_URL=postgresql://cinevo:cinevo@postgres:5432/cinevo_test DATABASE_URL_TEST=postgresql://cinevo:cinevo@postgres:5432/cinevo_test JWT_SECRET=cinevo-ci-test-secret yarn test
+    - yarn prisma db update
+    - yarn test
 
 frontend:build:
   stage: build
