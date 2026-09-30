@@ -87,7 +87,6 @@ function App() {
   const [authForm, setAuthForm] = useState({
     name: "",
     email: "",
-    phone: "",
     password: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -700,7 +699,6 @@ function App() {
         await registerCustomer(
           authForm.name,
           authForm.email,
-          authForm.phone,
           authForm.password,
         );
       }
@@ -757,7 +755,7 @@ function App() {
           <span>cinevo</span>
         </a>
         <div className="header-actions">
-          {selectedMovie && page !== "catalog" && (
+          {selectedMovie && (
             <button
               className={`favorite-toggle ${
                 isFavorite(selectedMovie.id) ? "saved" : ""
@@ -1234,33 +1232,16 @@ function App() {
             </p>
             <form onSubmit={(event) => void submitAuthentication(event)}>
               {authMode === "register" && (
-                <>
-                  <label>
-                    Nome<input
-                      required
-                      minLength={2}
-                      value={authForm.name}
-                      onChange={(event) =>
-                        setAuthForm({ ...authForm, name: event.target.value })}
-                      autoComplete="name"
-                    />
-                  </label>
-                  <label>
-                    Telefone<input
-                      required
-                      type="tel"
-                      inputMode="tel"
-                      minLength={10}
-                      maxLength={20}
-                      pattern="[0-9()\\s+-]{10,20}"
-                      placeholder="(11) 99999-9999"
-                      value={authForm.phone}
-                      onChange={(event) =>
-                        setAuthForm({ ...authForm, phone: event.target.value })}
-                      autoComplete="tel"
-                    />
-                  </label>
-                </>
+                <label>
+                  Nome<input
+                    required
+                    minLength={2}
+                    value={authForm.name}
+                    onChange={(event) =>
+                      setAuthForm({ ...authForm, name: event.target.value })}
+                    autoComplete="name"
+                  />
+                </label>
               )}
               <label>
                 E-mail<input
