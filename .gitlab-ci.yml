@@ -5,6 +5,8 @@ stages:
 default:
   image: node:24-bookworm
   interruptible: true
+  tags:
+    - homeserver
 
 variables:
   YARN_CACHE_FOLDER: "$CI_PROJECT_DIR/.yarn-cache"
