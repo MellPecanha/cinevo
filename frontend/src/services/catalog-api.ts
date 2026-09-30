@@ -205,8 +205,8 @@ export function loginCustomer(email: string, password: string) {
   return postCatalogResource<AuthResponse>('/auth/login', { email, password })
 }
 
-export function registerCustomer(name: string, email: string, password: string) {
-  return postCatalogResource<{ id: number }>('/users', { name, email, password })
+export function registerCustomer(name: string, email: string, phone: string, password: string) {
+  return postCatalogResource<{ id: number }>('/users', { name, email, phone, password })
 }
 
 export function createOrder(token: string, sessionId: number, tickets: Array<{ seatId: number; type: TicketType }>) {

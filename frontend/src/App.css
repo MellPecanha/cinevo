@@ -17,7 +17,7 @@
   --raised: oklch(94% 0.01 255);
   --line: oklch(78% 0.02 255);
   --muted: oklch(42% 0.025 255);
-  --mint: oklch(48% 0.12 160);
+  --mint: oklch(43% 0.13 160);
   color: oklch(20% 0.02 255);
   background: oklch(91% 0.01 255);
 }
@@ -100,6 +100,36 @@
 .app-shell.light .seat.held, .app-shell.light .seat.sold {
   color: oklch(48% 0.02 255);
   background: oklch(84% 0.01 255);
+}
+.app-shell.light .primary-action:disabled {
+  border-color: oklch(68% 0.045 160);
+  color: oklch(34% 0.045 160);
+  background: oklch(81% 0.065 160);
+  opacity: 1;
+}
+.app-shell.light .primary-action {
+  border-color: oklch(38% 0.11 160);
+  color: oklch(98% 0.006 255);
+  background: var(--mint);
+}
+.app-shell.light .primary-action:hover:not(:disabled) {
+  border-color: oklch(34% 0.1 160);
+  background: oklch(38% 0.13 160);
+}
+.app-shell.light .time-options button:hover,
+.app-shell.light .time-options .selected-time {
+  border-color: oklch(38% 0.11 160);
+  color: oklch(98% 0.006 255);
+  background: var(--mint);
+}
+.app-shell.light .brand-mark,
+.app-shell.light .skip-link {
+  color: oklch(98% 0.006 255);
+}
+.app-shell.light .sales-pagination button:disabled {
+  color: oklch(46% 0.02 255);
+  background: oklch(91% 0.008 255);
+  opacity: 1;
 }
 
 .theme-toggle {
@@ -2241,4 +2271,78 @@
 .app-shell.light .movie-poster strong {
   color: oklch(97% 0.008 255) !important;
   text-shadow: 0 2px 14px oklch(8% 0.015 255 / 0.72);
+}
+
+/* Tema claro: componentes que possuem cores próprias no tema escuro. */
+.app-shell.light .ticket-type-selection legend,
+.app-shell.light .ticket-type-selection label,
+.app-shell.light .admin-form label,
+.app-shell.light .admin-weekdays legend {
+  color: oklch(24% 0.02 255);
+}
+
+.app-shell.light .ticket-type-selection label {
+  background: oklch(99% 0.004 255);
+}
+
+.app-shell.light .ticket-type-selection select {
+  color: oklch(22% 0.02 255);
+  background: oklch(95% 0.008 255);
+}
+
+.app-shell.light .seat.available:hover,
+.app-shell.light .seat.selected,
+.app-shell.light .ticket-tabs .active,
+.app-shell.light .admin-tabs .active {
+  border-color: oklch(38% 0.11 160);
+  color: oklch(98% 0.006 255);
+  background: var(--mint);
+}
+
+.app-shell.light .seat-legend i {
+  border-color: oklch(66% 0.025 255);
+  background: oklch(95% 0.008 255);
+}
+
+.app-shell.light .seat-legend i.selected {
+  border-color: oklch(38% 0.11 160);
+  background: var(--mint);
+}
+
+.app-shell.light .seat-legend i.sold {
+  border-color: transparent;
+  background: oklch(66% 0.012 255);
+}
+
+.app-shell.light .favorite-toggle {
+  color: oklch(24% 0.02 255);
+  background: oklch(99% 0.004 255);
+}
+
+.app-shell.light .favorite-open {
+  color: oklch(20% 0.02 255);
+  background: linear-gradient(100deg, oklch(93% 0.012 255), transparent);
+}
+
+.app-shell.light .favorite-remove {
+  color: oklch(28% 0.02 255);
+  background: oklch(91% 0.01 255);
+}
+
+.app-shell.light .metric-grid .revenue-metric {
+  background: oklch(93% 0.045 160);
+}
+
+.app-shell.light .metric-grid .revenue-metric strong {
+  color: oklch(36% 0.1 160);
+}
+
+.app-shell.light .sale-status.used {
+  color: oklch(45% 0.11 85);
+  background: oklch(91% 0.075 85);
+}
+
+.app-shell.light .sale-status.cancelled {
+  color: oklch(48% 0.15 25);
+  background: oklch(93% 0.045 25);
 }
