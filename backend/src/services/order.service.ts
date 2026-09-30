@@ -102,6 +102,14 @@ export async function createOrder(
     throw new Error('Sessão não encontrada');
   }
 
+  if (!session.isActive) {
+    throw new Error('Esta sessão não está disponível para compra');
+  }
+
+  if (new Date(session.startsAt) <= new Date()) {
+    throw new Error('Não é possível comprar ingressos para uma sessão já iniciada');
+  }
+
   await expireSeatHolds(data.sessionId);
 
   const selectedSeatIds = data.tickets.map(

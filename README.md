@@ -139,7 +139,7 @@ Suba a aplicação completa, API e PostgreSQL:
 docker compose up -d
 ```
 
-A aplicação ficará em `http://localhost:8080` e a API em `http://localhost:3333`. O frontend usa um proxy interno para `/api`, então as rotas de compra, como `/filmes/:id`, `/checkout` e `/ingressos`, também funcionam ao recarregar a página. O container da API aplica atualizações aditivas do contrato Prisma antes de iniciar.
+A aplicação ficará em `http://localhost:8081` e a API em `http://localhost:3333`. O frontend usa um proxy interno para `/api`, então as rotas de compra, como `/filmes/:id`, `/checkout` e `/ingressos`, também funcionam ao recarregar a página. O container da API aplica atualizações aditivas do contrato Prisma antes de iniciar. Defina `FRONTEND_PORT` para escolher outra porta.
 
 Crie `backend/.env` a partir de `backend/.env.example`:
 
@@ -242,9 +242,12 @@ A suíte é organizada por domínio em `backend/test` e cobre:
 - expiração de hold e liberação do assento;
 - validação única de ingresso por administrador vinculado ao cinema.
 
+## Deploy
+
+O projeto é publicado em `https://cinevo.primellout.com`. A pipeline do GitLab valida o frontend e backend, executa os testes de integração e faz o deploy do branch principal com Docker Compose. Configure `JWT_SECRET`, `POSTGRES_PASSWORD` e `FRONTEND_ORIGIN` como variáveis protegidas do GitLab; para o domínio público, use `FRONTEND_ORIGIN=https://cinevo.primellout.com`.
+
 ## Próximos passos
 
-- configurar CI no GitLab quando o repositório for migrado;
 - paginação no backend para catálogos muito grandes;
 - leitura de QR Code pela câmera, usando a API de câmera do navegador;
-- deploy em ambiente público com variáveis de ambiente de produção.
+- testes de componentes, E2E, acessibilidade e validação visual do frontend.

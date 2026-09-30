@@ -75,4 +75,24 @@ describe('ingressos', () => {
       .expect(200)
       .expect((response) => expect(response.body[0].status).toBe('CANCELLED'));
   });
+
+  it('cancela reservas pendentes ao cancelar uma sessão', async () => {
+    const resource = createTestResources();
+    resources.push(resource);
+    const { cinema, session } = await createFixture(resource);
+    const customer = await registerAndLogin(resource, 'Cliente Reserva Pendente');
+    const cinemaAdmin = await registerAndLogin(resource, 'Gerente Reserva Pendente');
+    resource.cinemaAdminUserId = cinemaAdmin.id;
+
+    await db.orm.public.User.where({ id: cinemaAdmin.id }).update({ role: 'CINEMA_ADMIN' });
+    await db.orm.public.CinemaAdmin.create({ cinemaId: cinema.id, userId: cinemaAdmin.id });
+    const adminLogin = await request(app).post('/auth/login').send({ email: cinemaAdmin.email, password: 'Teste#123' }).expect(200);
+    const order = await request(app).post('/orders').set('Authorization', customer.authorization).send({ sessionId: session.id, tickets: [{ seatId: resource.seatId, type: 'FULL' }] }).expect(201);
+    resource.orderIds.push(order.body.id);
+
+    await request(app).patch(`/sessions/${session.id}/cancel`).set('Authorization', `Bearer ${adminLogin.body.token as string}`).expect(200);
+    const cancelledOrder = await request(app).get(`/orders/${order.body.id}`).set('Authorization', customer.authorization).expect(200);
+    expect(cancelledOrder.body.status).toBe('CANCELLED');
+    expect(await db.orm.public.SeatHold.where({ orderId: order.body.id }).all()).toHaveLength(0);
+  });
 });

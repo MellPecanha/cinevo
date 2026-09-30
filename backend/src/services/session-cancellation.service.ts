@@ -7,13 +7,23 @@ export async function cancelSession(sessionId: number) {
     if (!session) throw new NotFoundError('Sessão não encontrada');
 
     const tickets = await tx.orm.public.Ticket.where({ sessionId }).all();
-    const orderIds = [...new Set(tickets.filter((ticket) => ticket.status !== 'CANCELLED').map((ticket) => ticket.orderId))];
+    const holds = await tx.orm.public.SeatHold.where({ sessionId }).all();
+    const paidOrderIds = tickets
+      .filter((ticket) => ticket.status !== 'CANCELLED')
+      .map((ticket) => ticket.orderId);
+    const pendingOrderIds = holds.map((hold) => hold.orderId);
+    const orderIds = [...new Set([...paidOrderIds, ...pendingOrderIds])];
 
     await tx.orm.public.Session.where({ id: sessionId }).update({ isActive: false });
     await tx.orm.public.Ticket.where({ sessionId }).update({ status: 'CANCELLED' });
+    await tx.orm.public.SeatHold.where({ sessionId }).delete();
 
     for (const orderId of orderIds) {
-      await tx.orm.public.Order.where({ id: orderId }).update({ status: 'CANCELLED' });
+      const order = await tx.orm.public.Order.where({ id: orderId }).first();
+
+      if (order && (order.status === 'PAID' || order.status === 'PENDING')) {
+        await tx.orm.public.Order.where({ id: orderId }).update({ status: 'CANCELLED' });
+      }
     }
 
     return { cancelledTickets: tickets.length, affectedOrders: orderIds.length };

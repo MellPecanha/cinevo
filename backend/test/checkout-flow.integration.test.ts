@@ -36,4 +36,17 @@ describe('jornada de checkout', () => {
     const expiredOrder = await request(app).get(`/orders/${order.body.id}`).set('Authorization', customer.authorization).expect(200);
     expect(expiredOrder.body.status).toBe('EXPIRED');
   });
+
+  it('recusa reservas para sessões inativas ou já iniciadas', async () => {
+    const resource = createTestResources();
+    resources.push(resource);
+    const { session } = await createFixture(resource);
+    const customer = await registerAndLogin(resource, 'Cliente Sessão Indisponível');
+
+    await db.orm.public.Session.where({ id: session.id }).update({ isActive: false });
+    await request(app).post('/orders').set('Authorization', customer.authorization).send({ sessionId: session.id, tickets: [{ seatId: resource.seatId, type: 'FULL' }] }).expect(400, { message: 'Esta sessão não está disponível para compra' });
+
+    await db.orm.public.Session.where({ id: session.id }).update({ isActive: true, startsAt: new Date(Date.now() - 1_000).toISOString() });
+    await request(app).post('/orders').set('Authorization', customer.authorization).send({ sessionId: session.id, tickets: [{ seatId: resource.seatId, type: 'FULL' }] }).expect(400, { message: 'Não é possível comprar ingressos para uma sessão já iniciada' });
+  });
 });

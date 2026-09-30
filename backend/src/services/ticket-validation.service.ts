@@ -49,11 +49,15 @@ export async function validateTicket(
     const usedAt = new Date().toISOString();
 
     const usedTicket = await tx.orm.public.Ticket
-      .where({ id: ticket.id })
+      .where({ id: ticket.id, status: 'ACTIVE' })
       .update({
         status: 'USED',
         usedAt,
       });
+
+    if (!usedTicket) {
+      throw new Error('Ingresso já utilizado');
+    }
 
     return usedTicket;
   });

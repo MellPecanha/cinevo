@@ -235,6 +235,63 @@ paths:
       responses:
         '200': { description: Métricas de catálogo, vendas e ingressos }
         '403': { $ref: '#/components/responses/Forbidden' }
+  /cinemas/{cinemaId}/admins:
+    post:
+      summary: Vincula um usuário como administrador de um cinema
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: cinemaId
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '201': { description: Vínculo administrativo criado }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /tickets/validate:
+    post:
+      summary: Valida um ingresso ativo e registra seu uso
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string }
+      responses:
+        '200': { description: Ingresso validado }
+        '400': { description: Ingresso inválido, cancelado ou já utilizado }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /movies/{id}/deactivate:
+    patch:
+      summary: Desativa um filme
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Filme desativado }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /rooms/{roomId}/deactivate:
+    patch:
+      summary: Desativa uma sala
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Sala desativada }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /sessions/{id}/deactivate:
+    patch:
+      summary: Desativa uma sessão
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Sessão desativada }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /sessions/{id}/cancel:
+    patch:
+      summary: Cancela uma sessão, ingressos e reservas pendentes
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Sessão cancelada }
+        '403': { $ref: '#/components/responses/Forbidden' }
 components:
   securitySchemes:
     bearerAuth:

@@ -65,25 +65,42 @@ export async function createSession(
     endsAt: new Date(occurrenceStart.getTime() + movie.duration * 60 * 1000).toISOString(),
   }));
 
-  const conflictingSessions = await db.orm.public.Session
-    .where({
-      roomId: data.roomId,
-    })
-    .all();
+  return db.transaction(async (tx) => {
+    const room = await tx.orm.public.Room
+      .where({ id: data.roomId })
+      .first();
 
-  const hasConflict = occurrences.some((occurrence) => conflictingSessions.some((session) => occurrence.startsAt < session.endsAt && occurrence.endsAt > session.startsAt));
+    if (!room) {
+      throw new Error('Sala não encontrada');
+    }
 
-  if (hasConflict) {
-    throw new Error(
-      'A sala já possui uma sessão neste horário',
+    // Atualizar a própria linha da sala adquire um lock de linha no PostgreSQL.
+    // Assim, criações concorrentes para a mesma sala são serializadas antes da
+    // consulta de conflito e da inserção das sessões.
+    await tx.orm.public.Room
+      .where({ id: room.id })
+      .update({ isActive: room.isActive });
+
+    const conflictingSessions = await tx.orm.public.Session
+      .where({ roomId: data.roomId })
+      .all();
+
+    const hasConflict = occurrences.some((occurrence) =>
+      conflictingSessions.some((session) =>
+        occurrence.startsAt < session.endsAt && occurrence.endsAt > session.startsAt,
+      ),
     );
-  }
 
-  return db.transaction(async (tx) => Promise.all(occurrences.map((occurrence) => tx.orm.public.Session.create({
-    movieId: data.movieId,
-    roomId: data.roomId,
-    startsAt: occurrence.startsAt,
-    endsAt: occurrence.endsAt,
-    price: data.price.toFixed(2),
-  }))));
+    if (hasConflict) {
+      throw new Error('A sala já possui uma sessão neste horário');
+    }
+
+    return Promise.all(occurrences.map((occurrence) => tx.orm.public.Session.create({
+      movieId: data.movieId,
+      roomId: data.roomId,
+      startsAt: occurrence.startsAt,
+      endsAt: occurrence.endsAt,
+      price: data.price.toFixed(2),
+    })));
+  });
 }
