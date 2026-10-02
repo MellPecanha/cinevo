@@ -44,6 +44,20 @@ const movies: SeedMovie[] = [
     classification: 'AGE_12',
     coverUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=85',
   },
+  {
+    title: 'Bosque de Vidro',
+    description: 'Uma jovem descobre que as árvores de sua cidade guardam histórias vivas.',
+    duration: 102,
+    classification: 'L',
+    coverUrl: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=900&q=85',
+  },
+  {
+    title: 'Vértice do Amanhã',
+    description: 'Em uma corrida contra o tempo, uma engenheira precisa escolher qual futuro salvar.',
+    duration: 128,
+    classification: 'AGE_12',
+    coverUrl: 'https://images.unsplash.com/photo-1531058020387-3be344556be6?auto=format&fit=crop&w=900&q=85',
+  },
 ];
 
 function futureSession(hoursFromNow: number, durationMinutes: number) {
@@ -324,39 +338,22 @@ async function seed() {
   ]);
 
   const seedMovies = await Promise.all(movies.map(ensureMovie));
-  const sessionTimes = [
-    futureSession(4, seedMovies[0].duration),
-    futureSession(7, seedMovies[1].duration),
-    futureSession(24, seedMovies[2].duration),
-    futureSession(27, seedMovies[3].duration),
-    futureSession(30, seedMovies[0].duration),
-    futureSession(34, seedMovies[1].duration),
-    futureSession(48, seedMovies[2].duration),
-    futureSession(52, seedMovies[3].duration),
-    futureSession(58, seedMovies[0].duration),
-    futureSession(62, seedMovies[1].duration),
-    futureSession(66, seedMovies[2].duration),
-    futureSession(72, seedMovies[3].duration),
-    futureSession(76, seedMovies[0].duration),
-    futureSession(80, seedMovies[1].duration),
-  ];
+  const rooms = [standardRoom, vipRoom, pinheirosRoom, moemaRoom, copacabanaRoom, botafogoRoom, savassiRoom, batelRoom, boaViagemRoom];
+  const prices = ['32.00', '46.00', '29.00', '34.00'];
+  const sessionPlans = Array.from({ length: 7 }, (_, day) => [0, 1, 2, 3].map((movieIndex) => ({
+    movieIndex,
+    room: rooms[(day * 4 + movieIndex) % rooms.length],
+    price: prices[movieIndex],
+    // A primeira programação começa nas próximas horas e continua por sete dias.
+    times: futureSession(3 + day * 24 + movieIndex * 3, seedMovies[movieIndex].duration),
+  }))).flat();
 
-  const seededSessions = await Promise.all([
-    ensureSession({ movieId: seedMovies[0].id, roomId: standardRoom.id, price: '32.00', ...sessionTimes[0] }),
-    ensureSession({ movieId: seedMovies[1].id, roomId: vipRoom.id, price: '46.00', ...sessionTimes[1] }),
-    ensureSession({ movieId: seedMovies[2].id, roomId: pinheirosRoom.id, price: '29.00', ...sessionTimes[2] }),
-    ensureSession({ movieId: seedMovies[3].id, roomId: standardRoom.id, price: '34.00', ...sessionTimes[3] }),
-    ensureSession({ movieId: seedMovies[0].id, roomId: moemaRoom.id, price: '48.00', ...sessionTimes[4] }),
-    ensureSession({ movieId: seedMovies[1].id, roomId: copacabanaRoom.id, price: '31.00', ...sessionTimes[5] }),
-    ensureSession({ movieId: seedMovies[2].id, roomId: botafogoRoom.id, price: '33.00', ...sessionTimes[6] }),
-    ensureSession({ movieId: seedMovies[3].id, roomId: vipRoom.id, price: '49.00', ...sessionTimes[7] }),
-    ensureSession({ movieId: seedMovies[0].id, roomId: savassiRoom.id, price: '30.00', ...sessionTimes[8] }),
-    ensureSession({ movieId: seedMovies[1].id, roomId: batelRoom.id, price: '47.00', ...sessionTimes[9] }),
-    ensureSession({ movieId: seedMovies[2].id, roomId: boaViagemRoom.id, price: '31.00', ...sessionTimes[10] }),
-    ensureSession({ movieId: seedMovies[3].id, roomId: pinheirosRoom.id, price: '29.00', ...sessionTimes[11] }),
-    ensureSession({ movieId: seedMovies[0].id, roomId: copacabanaRoom.id, price: '33.00', ...sessionTimes[12] }),
-    ensureSession({ movieId: seedMovies[1].id, roomId: standardRoom.id, price: '32.00', ...sessionTimes[13] }),
-  ]);
+  const seededSessions = await Promise.all(sessionPlans.map((plan) => ensureSession({
+    movieId: seedMovies[plan.movieIndex].id,
+    roomId: plan.room.id,
+    price: plan.price,
+    ...plan.times,
+  })));
 
   const paulistaSeats = await db.orm.public.Seat
     .where({ roomId: standardRoom.id })
@@ -391,7 +388,7 @@ async function seed() {
   console.log('Cliente adicional: marina@cinevo.local / Cinevo#123');
   console.log('Admin da plataforma: admin@cinevo.local / Cinevo#123');
   console.log('Admin do cinema: gerente@cinevo.local / Cinevo#123');
-  console.log(`Recursos: 8 cinemas em 5 cidades, 9 salas, ${seedMovies.length} filmes, 14 sessões e 2 ingressos pagos.`);
+  console.log(`Recursos: 8 cinemas em 5 cidades, 9 salas, ${seedMovies.length} filmes, ${seededSessions.length} sessões e 2 ingressos pagos.`);
   console.log(`Usuário de demonstração criado: ${customer.email}; admin: ${platformAdmin.email}.`);
 }
 

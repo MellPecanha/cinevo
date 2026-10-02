@@ -127,7 +127,16 @@ function App() {
     fetchMovies()
       .then((apiMovies) => {
         if (active && apiMovies.length > 0) {
-          setCatalogMovies(apiMovies.map(mapApiMovie));
+          const movieIdsWithUpcomingSessions = new Set(
+            sessions
+              .filter((session) => new Date(session.startsAt) > new Date())
+              .map((session) => session.movieId),
+          );
+          setCatalogMovies(apiMovies.map((movie, index) => ({
+            ...mapApiMovie(movie, index),
+            status: movieIdsWithUpcomingSessions.has(movie.id) ? "Em cartaz" : "Em breve",
+            release: movieIdsWithUpcomingSessions.has(movie.id) ? undefined : "Em breve",
+          })));
           setNotice("Programação atualizada.");
         }
       })
@@ -142,7 +151,21 @@ function App() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [sessions]);
+
+  useEffect(() => {
+    const movieIdsWithUpcomingSessions = new Set(
+      sessions
+        .filter((session) => new Date(session.startsAt) > new Date())
+        .map((session) => session.movieId),
+    );
+
+    setCatalogMovies((movies) => movies.map((movie) => ({
+      ...movie,
+      status: movieIdsWithUpcomingSessions.has(movie.id) ? "Em cartaz" : "Em breve",
+      release: movieIdsWithUpcomingSessions.has(movie.id) ? undefined : "Em breve",
+    })));
+  }, [sessions]);
 
   useEffect(() => {
     if (!selectedSessionId) return;
