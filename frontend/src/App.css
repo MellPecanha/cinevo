@@ -1243,6 +1243,8 @@
 .tickets-panel {
   position: relative;
   width: min(100%, 890px);
+  max-width: calc(100vw - 32px);
+  min-width: 0;
   margin: auto;
   padding: clamp(23px, 4vw, 40px);
   border: 1px solid var(--line);
@@ -1632,12 +1634,13 @@
 
 .admin-workspace {
   display: grid;
-  grid-template-columns: minmax(260px, 0.9fr) minmax(270px, 1.1fr);
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: 18px;
 }
 
 .admin-form,
 .admin-list {
+  min-width: 0;
   display: grid;
   gap: 14px;
   padding: 20px;
@@ -1664,6 +1667,7 @@
 .admin-form input,
 .admin-form select,
 .admin-form textarea {
+  width: 100%;
   min-height: 42px;
   padding: 9px 10px;
   border: 1px solid var(--line);
@@ -2248,6 +2252,23 @@
 }
 
 @media (max-width: 680px) {
+  .tickets-overlay {
+    padding: 16px;
+  }
+
+  .tickets-panel {
+    max-width: 100%;
+    padding: 22px 18px;
+  }
+
+  .admin-tabs {
+    gap: 7px;
+  }
+
+  .admin-tabs button {
+    flex: 1 1 140px;
+  }
+
   .admin-workspace {
     grid-template-columns: 1fr;
   }
