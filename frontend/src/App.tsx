@@ -102,6 +102,7 @@ function App() {
   const [ticketQrCodes, setTicketQrCodes] = useState<Record<string, string>>(
     {},
   );
+  const [copiedTicketCode, setCopiedTicketCode] = useState<string | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [profileMessage, setProfileMessage] = useState("");
@@ -151,20 +152,6 @@ function App() {
     return () => {
       active = false;
     };
-  }, [sessions]);
-
-  useEffect(() => {
-    const movieIdsWithUpcomingSessions = new Set(
-      sessions
-        .filter((session) => new Date(session.startsAt) > new Date())
-        .map((session) => session.movieId),
-    );
-
-    setCatalogMovies((movies) => movies.map((movie) => ({
-      ...movie,
-      status: movieIdsWithUpcomingSessions.has(movie.id) ? "Em cartaz" : "Em breve",
-      release: movieIdsWithUpcomingSessions.has(movie.id) ? undefined : "Em breve",
-    })));
   }, [sessions]);
 
   useEffect(() => {
@@ -560,6 +547,17 @@ function App() {
           ? error.message
           : "Não foi possível carregar o QR Code.",
       );
+    }
+  };
+  const copyTicketCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedTicketCode(code);
+      window.setTimeout(() => {
+        setCopiedTicketCode((current) => current === code ? null : current);
+      }, 2_000);
+    } catch {
+      setTicketMessage("Não foi possível copiar o código. Selecione-o e copie manualmente.");
     }
   };
   const openProfile = async () => {
@@ -1533,6 +1531,7 @@ function App() {
                             {ticket.status === "ACTIVE" && (
                               <div className="ticket-qr">
                                 <button
+                                  className="ticket-qr-button"
                                   type="button"
                                   onClick={() =>
                                     void showTicketQrCode(ticket.code)}
@@ -1546,7 +1545,19 @@ function App() {
                                     )
                                     : "Mostrar QR Code"}
                                 </button>
-                                <small>Código: {ticket.code}</small>
+                                <div className="ticket-code" aria-live="polite">
+                                  <span>Código</span>
+                                  <code>{ticket.code}</code>
+                                </div>
+                                <button
+                                  className="copy-ticket-code"
+                                  type="button"
+                                  onClick={() => void copyTicketCode(ticket.code)}
+                                >
+                                  {copiedTicketCode === ticket.code
+                                    ? "Código copiado"
+                                    : "Copiar código"}
+                                </button>
                                 <button
                                   className="cancel-ticket"
                                   type="button"

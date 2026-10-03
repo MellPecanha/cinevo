@@ -1331,7 +1331,7 @@
   justify-items: center;
 }
 
-.ticket-qr button {
+.ticket-qr .ticket-qr-button {
   display: grid;
   min-width: 118px;
   min-height: 118px;
@@ -1350,14 +1350,38 @@
   height: 100px;
 }
 
-.ticket-qr small {
-  max-width: 140px;
-  overflow: hidden;
+.ticket-code {
+  display: grid;
+  max-width: 180px;
+  gap: 2px;
   color: var(--muted);
   font-size: 0.65rem;
   text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.ticket-code code {
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.copy-ticket-code {
+  min-width: 0;
+  min-height: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.copy-ticket-code:hover {
+  border-color: var(--mint);
+  color: var(--mint);
 }
 
 .ticket-tabs {
