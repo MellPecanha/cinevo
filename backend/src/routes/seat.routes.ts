@@ -3,6 +3,7 @@ import { Router } from 'express';
 import {
   getSeatsByRoom,
   getSeatsBySession,
+  patchSeatAvailability,
   postGenerateSeats,
 } from '../controllers/seat.controller.js';
 
@@ -11,6 +12,7 @@ import { authenticate } from '../middlewares/authenticate.js';
 import { authorizeCinemaFromRoomParam } from '../middlewares/cinema-access.js';
 import {
   generateSeatsSchema,
+  setSeatAvailabilitySchema,
 } from '../schemas/seat.schema.js';
 
 export const seatRoutes = Router();
@@ -18,6 +20,14 @@ export const seatRoutes = Router();
 seatRoutes.get(
   '/rooms/:roomId/seats',
   getSeatsByRoom,
+);
+
+seatRoutes.patch(
+  '/rooms/:roomId/seats/:seatId/availability',
+  authenticate,
+  validate(setSeatAvailabilitySchema),
+  authorizeCinemaFromRoomParam,
+  patchSeatAvailability,
 );
 
 seatRoutes.post(

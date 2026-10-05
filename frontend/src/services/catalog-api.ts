@@ -44,7 +44,15 @@ export type ApiSeat = {
   row: string
   number: number
   type: 'STANDARD' | 'VIP' | 'ACCESSIBLE'
-  status: 'AVAILABLE' | 'HELD' | 'SOLD'
+  status: 'AVAILABLE' | 'HELD' | 'SOLD' | 'UNAVAILABLE'
+}
+
+export type ApiRoomSeat = {
+  id: number
+  row: string
+  number: number
+  type: ApiSeat['type']
+  isAvailable: boolean
 }
 
 export type TicketType = 'FULL' | 'HALF'
@@ -185,6 +193,10 @@ export function fetchSessionSeats(sessionId: number) {
   return fetchCatalogResource<ApiSeat[]>(`/sessions/${sessionId}/seats`)
 }
 
+export function fetchRoomSeats(roomId: number) {
+  return fetchCatalogResource<ApiRoomSeat[]>(`/rooms/${roomId}/seats`)
+}
+
 async function postCatalogResource<T>(path: string, body: unknown, token?: string): Promise<T> {
   const response = await fetch(`${apiBaseUrl}${path}`, {
     method: 'POST',
@@ -278,6 +290,17 @@ export function createRoom(token: string, data: { cinemaId: number; number: numb
 
 export function generateSeats(token: string, roomId: number, data: { rows: number; seatsPerRow: number; accessibleSeats: string[]; vipSeats: string[] }) {
   return postCatalogResource<ApiSeat[]>(`/rooms/${roomId}/seats`, data, token)
+}
+
+export async function updateSeatAvailability(token: string, roomId: number, seatId: number, isAvailable: boolean) {
+  const response = await fetch(`${apiBaseUrl}/rooms/${roomId}/seats/${seatId}/availability`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ isAvailable }),
+  })
+  const body = await response.json().catch(() => null) as { message?: string } | ApiRoomSeat | null
+  if (!response.ok) throw new Error((body as { message?: string } | null)?.message ?? 'Não foi possível atualizar o assento.')
+  return body as ApiRoomSeat
 }
 
 export function createSession(token: string, data: { movieId: number; roomId: number; startsAt: string; price: number; recurrenceDays?: number[]; recurrenceUntil?: string }) {

@@ -1109,6 +1109,8 @@ function App() {
                                 ? "disponível"
                                 : seat.status === "HELD"
                                 ? "em reserva"
+                                : seat.status === "UNAVAILABLE"
+                                ? "indisponível para manutenção"
                                 : "vendido"
                             }`}
                           >
@@ -1129,6 +1131,9 @@ function App() {
                   </span>
                   <span>
                     <i className="sold" />Indisponível
+                  </span>
+                  <span>
+                    <i className="maintenance" />Em manutenção
                   </span>
                 </div>
                 {selectedTickets.length > 0 && (

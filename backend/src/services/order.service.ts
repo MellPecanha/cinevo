@@ -138,6 +138,10 @@ export async function createOrder(
         `O assento ${ticket.seatId} não pertence à sala da sessão`,
       );
     }
+
+    if (!seat.isAvailable) {
+      throw new Error(`O assento ${ticket.seatId} está indisponível para manutenção`);
+    }
   }
 
   const tickets = await db.orm.public.Ticket

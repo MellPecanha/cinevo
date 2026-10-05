@@ -4,7 +4,7 @@ Plataforma full stack para venda e gestão de ingressos de cinema. O projeto foi
 
 ## Destaques técnicos
 
-- Assentos são físicos, mas a disponibilidade pertence à combinação `Session + Seat`.
+- Assentos são físicos, mas a disponibilidade pertence à combinação `Session + Seat`. Um assento pode ser colocado em manutenção para bloquear novas vendas em todas as sessões da sala.
 - Um `SeatHold` reserva o assento por 10 minutos durante o checkout.
 - O banco impede dois holds simultâneos para o mesmo assento e sessão.
 - Tickets ativos ou utilizados têm um índice único parcial por sessão e assento. Tickets cancelados ficam no histórico e liberam o assento para revenda.
@@ -123,6 +123,7 @@ POST /movies                           # PLATFORM_ADMIN
 GET  /users                            # PLATFORM_ADMIN
 POST /rooms                            # CINEMA_ADMIN vinculado ou PLATFORM_ADMIN
 POST /rooms/:roomId/seats              # CINEMA_ADMIN vinculado ou PLATFORM_ADMIN
+PATCH /rooms/:roomId/seats/:seatId/availability # alterna manutenção do assento
 POST /sessions                         # CINEMA_ADMIN vinculado ou PLATFORM_ADMIN
 POST /tickets/validate                 # CINEMA_ADMIN vinculado ou PLATFORM_ADMIN
 PATCH /movies/:id/deactivate           # PLATFORM_ADMIN

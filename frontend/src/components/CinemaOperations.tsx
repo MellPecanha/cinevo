@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 
 import { CinemaSales } from './CinemaSales'
 import { TicketCheckIn } from './TicketCheckIn'
-import { createRoom, createSession, fetchManageableCinemas, fetchMovies, fetchRooms, fetchSessions, generateSeats, type ApiCinema, type ApiMovie, type ApiRoom, type ApiSession } from '../services/catalog-api'
+import { createRoom, createSession, fetchManageableCinemas, fetchMovies, fetchRoomSeats, fetchRooms, fetchSessions, generateSeats, updateSeatAvailability, type ApiCinema, type ApiMovie, type ApiRoom, type ApiRoomSeat, type ApiSession } from '../services/catalog-api'
 
 type CinemaOperationsProps = { token: string }
 type OperationsTab = 'rooms' | 'sessions' | 'sales' | 'checkin'
@@ -34,6 +34,9 @@ export function CinemaOperations({ token }: CinemaOperationsProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [roomForm, setRoomForm] = useState(defaultRoomForm)
   const [sessionForm, setSessionForm] = useState(defaultSessionForm)
+  const [maintenanceRoomId, setMaintenanceRoomId] = useState('')
+  const [maintenanceSeats, setMaintenanceSeats] = useState<ApiRoomSeat[]>([])
+  const [maintenanceSeatId, setMaintenanceSeatId] = useState<number | null>(null)
 
   const selectedMovie = movies.find((movie) => movie.id === Number(sessionForm.movieId))
   const roomsForSelectedCinema = useMemo(() => rooms.filter((room) => room.cinemaId === Number(sessionForm.cinemaId)), [rooms, sessionForm.cinemaId])
@@ -53,6 +56,35 @@ export function CinemaOperations({ token }: CinemaOperationsProps) {
     // oxlint-disable-next-line react/set-state-in-effect -- carrega dados externos ao abrir a área operacional.
     void loadData().catch(() => setFeedback('Não foi possível carregar os dados de operação.'))
   }, [loadData])
+
+  useEffect(() => {
+    const roomId = Number(maintenanceRoomId)
+    if (!roomId) {
+      // oxlint-disable-next-line react/set-state-in-effect -- limpa o mapa ao trocar ou remover a sala selecionada.
+      setMaintenanceSeats([])
+      return
+    }
+
+    void fetchRoomSeats(roomId)
+      .then(setMaintenanceSeats)
+      .catch(() => setFeedback('Não foi possível carregar os assentos desta sala.'))
+  }, [maintenanceRoomId])
+
+  const toggleSeatMaintenance = async (seat: ApiRoomSeat) => {
+    const roomId = Number(maintenanceRoomId)
+    if (!roomId) return
+    setMaintenanceSeatId(seat.id)
+    setFeedback('')
+    try {
+      const updated = await updateSeatAvailability(token, roomId, seat.id, !seat.isAvailable)
+      setMaintenanceSeats((current) => current.map((item) => item.id === updated.id ? updated : item))
+      setFeedback(updated.isAvailable ? `Assento ${updated.row}${updated.number} liberado para venda.` : `Assento ${updated.row}${updated.number} colocado em manutenção.`)
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : 'Não foi possível atualizar o assento.')
+    } finally {
+      setMaintenanceSeatId(null)
+    }
+  }
 
   const submitRoom = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -111,6 +143,13 @@ export function CinemaOperations({ token }: CinemaOperationsProps) {
       </form>
       <section className="admin-list" aria-label="Salas cadastradas"><h3>Salas cadastradas</h3>{managedRooms.length ? managedRooms.map((room) => <article key={room.id}><strong>Sala {room.number} · {room.type === 'VIP' ? 'VIP' : 'Tradicional'}</strong><span>{cinemas.find((cinema) => cinema.id === room.cinemaId)?.name ?? `Cinema #${room.cinemaId}`}</span></article>) : <p className="empty-state">Nenhuma sala cadastrada.</p>}</section>
     </div>}
+
+    {tab === 'rooms' && <section className="admin-seat-maintenance" aria-labelledby="maintenance-title">
+      <div><p className="eyebrow">Manutenção</p><h3 id="maintenance-title">Disponibilidade de assentos</h3><p>Selecione uma sala e toque em uma cadeira para colocá-la em manutenção ou liberá-la novamente.</p></div>
+      <label>Sala<select value={maintenanceRoomId} onChange={(event) => setMaintenanceRoomId(event.target.value)}><option value="">Selecione uma sala</option>{managedRooms.map((room) => <option key={room.id} value={room.id}>{cinemas.find((cinema) => cinema.id === room.cinemaId)?.name ?? `Cinema #${room.cinemaId}`} · Sala {room.number}</option>)}</select></label>
+      {maintenanceSeats.length > 0 && <div className="maintenance-seat-grid" aria-label="Mapa de manutenção">{maintenanceSeats.map((seat) => <button key={seat.id} type="button" className={seat.isAvailable ? 'available' : 'maintenance'} disabled={maintenanceSeatId === seat.id} onClick={() => void toggleSeatMaintenance(seat)} aria-pressed={!seat.isAvailable} aria-label={`Assento ${seat.row}${seat.number}, ${seat.isAvailable ? 'disponível, colocar em manutenção' : 'em manutenção, liberar para venda'}`}>{seat.row}{seat.number}</button>)}</div>}
+      {maintenanceRoomId && maintenanceSeats.length === 0 && <p className="empty-state">Esta sala ainda não possui assentos configurados.</p>}
+    </section>}
 
     {tab === 'sessions' && <div className="admin-workspace">
       <form className="admin-form" onSubmit={(event) => void submitSession(event)}>

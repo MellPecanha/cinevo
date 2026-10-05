@@ -49,4 +49,17 @@ describe('jornada de checkout', () => {
     await db.orm.public.Session.where({ id: session.id }).update({ isActive: true, startsAt: new Date(Date.now() - 1_000).toISOString() });
     await request(app).post('/orders').set('Authorization', customer.authorization).send({ sessionId: session.id, tickets: [{ seatId: resource.seatId, type: 'FULL' }] }).expect(400, { message: 'Não é possível comprar ingressos para uma sessão já iniciada' });
   });
+
+  it('exibe e bloqueia assentos indisponíveis para manutenção', async () => {
+    const resource = createTestResources();
+    resources.push(resource);
+    const { session } = await createFixture(resource);
+    const customer = await registerAndLogin(resource, 'Cliente Manutenção');
+
+    await db.orm.public.Seat.where({ id: resource.seatId }).update({ isAvailable: false });
+    await request(app).get(`/sessions/${session.id}/seats`).expect(200).expect((response) => {
+      expect(response.body[0].status).toBe('UNAVAILABLE');
+    });
+    await request(app).post('/orders').set('Authorization', customer.authorization).send({ sessionId: session.id, tickets: [{ seatId: resource.seatId, type: 'FULL' }] }).expect(400, { message: `O assento ${resource.seatId} está indisponível para manutenção` });
+  });
 });

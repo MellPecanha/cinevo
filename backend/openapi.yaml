@@ -81,13 +81,39 @@ paths:
       responses:
         '201': { description: Mapa de assentos criado }
         '400': { description: Mapa já existente ou dados inválidos }
+  /rooms/{roomId}/seats/{seatId}/availability:
+    patch:
+      summary: Coloca um assento em manutenção ou o libera para venda
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - name: seatId
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [isAvailable]
+              properties:
+                isAvailable: { type: boolean }
+      responses:
+        '200': { description: Disponibilidade do assento atualizada }
+        '400': { description: Assento possui reserva ativa ou ingresso futuro }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /sessions/{sessionId}/seats:
     get:
       summary: Exibe o mapa de assentos disponível para uma sessão
       parameters:
         - $ref: '#/components/parameters/SessionId'
       responses:
-        '200': { description: Assentos com status AVAILABLE, HELD ou SOLD }
+        '200': { description: Assentos com status AVAILABLE, HELD, SOLD ou UNAVAILABLE }
         '404': { $ref: '#/components/responses/NotFound' }
   /users:
     post:

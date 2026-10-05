@@ -41,3 +41,9 @@ export const generateSeatsSchema = z.object({
 
 export type GenerateSeatsInput =
   z.infer<typeof generateSeatsSchema>;
+
+export const setSeatAvailabilitySchema = z.object({
+  isAvailable: z.boolean(),
+});
+
+export type SetSeatAvailabilityInput = z.infer<typeof setSeatAvailabilitySchema>;

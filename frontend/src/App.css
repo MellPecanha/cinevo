@@ -1001,6 +1001,14 @@
   background: oklch(18% 0.014 255);
 }
 
+.seat-legend i.maintenance,
+.seat.unavailable {
+  border-color: oklch(72% 0.14 85);
+  color: oklch(72% 0.14 85);
+  background: oklch(72% 0.14 85 / 0.18);
+  text-decoration: line-through;
+}
+
 .seat-summary {
   display: grid;
   grid-template-columns: 1fr auto auto;
@@ -1713,6 +1721,73 @@
   color: var(--muted);
   font-size: 0.79rem;
   line-height: 1.45;
+}
+
+.admin-seat-maintenance {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: var(--surface);
+}
+
+.admin-seat-maintenance h3,
+.admin-seat-maintenance p {
+  margin: 0;
+}
+
+.admin-seat-maintenance > div > p:not(.eyebrow) {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.admin-seat-maintenance > label {
+  display: grid;
+  gap: 7px;
+  max-width: 420px;
+  color: oklch(87% 0.01 255);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.admin-seat-maintenance select {
+  min-height: 42px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: inherit;
+  background: var(--raised);
+  font: inherit;
+}
+
+.maintenance-seat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+  gap: 8px;
+}
+
+.maintenance-seat-grid button {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.maintenance-seat-grid .available {
+  color: var(--mint);
+  background: oklch(75% 0.13 160 / 0.1);
+}
+
+.maintenance-seat-grid .maintenance {
+  border-color: oklch(72% 0.14 85 / 0.6);
+  color: oklch(78% 0.14 85);
+  background: oklch(72% 0.14 85 / 0.14);
 }
 
 .admin-form-hint {

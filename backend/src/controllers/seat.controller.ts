@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import {
   generateSeats,
   listSeatsByRoom,
+  setSeatAvailability,
 } from '../services/seat.service.js';
 
 import {
@@ -51,4 +52,17 @@ export async function getSeatsBySession(
   }
 
   res.json(seats);
+}
+
+export async function patchSeatAvailability(req: Request, res: Response) {
+  const roomId = Number(req.params.roomId);
+  const seatId = Number(req.params.seatId);
+
+  try {
+    res.json(await setSeatAvailability(roomId, seatId, req.body));
+  } catch (error) {
+    res.status(400).json({
+      message: error instanceof Error ? error.message : 'Não foi possível atualizar o assento',
+    });
+  }
 }

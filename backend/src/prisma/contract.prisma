@@ -108,6 +108,7 @@ model Seat {
   row       String
   number    Int
   type      SeatType
+  isAvailable Boolean                    @default(true)
 
   room      Room                       @relation(fields:[roomId], references:[id])
   roomId    Int

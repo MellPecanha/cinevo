@@ -49,9 +49,11 @@ export async function getSessionSeats(sessionId: number) {
   );
 
   return seats.map((seat) => {
-    let status: 'AVAILABLE' | 'HELD' | 'SOLD';
+    let status: 'AVAILABLE' | 'HELD' | 'SOLD' | 'UNAVAILABLE';
 
-    if (soldSeatIds.has(seat.id)) {
+    if (!seat.isAvailable) {
+      status = 'UNAVAILABLE';
+    } else if (soldSeatIds.has(seat.id)) {
       status = 'SOLD';
     } else if (heldSeatIds.has(seat.id)) {
       status = 'HELD';
