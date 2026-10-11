@@ -1,5 +1,5 @@
 import { db } from '../prisma/db.js';
-import type { CreateCinemaDTO } from '../dtos/cinema.dto.js';
+import type { CreateCinemaDTO, UpdateCinemaDTO } from '../dtos/cinema.dto.js';
 
 export async function listCinemas() {
   return db.orm.public.Cinema.all();
@@ -12,6 +12,14 @@ export async function createCinema(data: CreateCinemaDTO) {
     city: data.city,
     state: data.state,
   });
+}
+
+export async function updateCinema(cinemaId: number, data: UpdateCinemaDTO) {
+  const cinema = await db.orm.public.Cinema.where({ id: cinemaId }).first();
+
+  if (!cinema) throw new Error('Cinema não encontrado');
+
+  return db.orm.public.Cinema.where({ id: cinemaId }).update(data);
 }
 
 export async function listManageableCinemas(

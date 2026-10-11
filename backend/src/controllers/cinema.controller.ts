@@ -4,6 +4,7 @@ import {
   createCinema,
   listManageableCinemas,
   listCinemas,
+  updateCinema,
 } from '../services/cinema.service.js';
 import { assignCinemaAdmin } from '../services/cinema-admin.service.js';
 
@@ -35,6 +36,21 @@ export async function postCinema(
   const cinema = await createCinema(req.body);
 
   res.status(201).json(cinema);
+}
+
+export async function patchCinema(req: Request, res: Response) {
+  const cinemaId = Number(req.params.id);
+
+  if (!Number.isSafeInteger(cinemaId) || cinemaId <= 0) {
+    res.status(400).json({ message: 'Cinema inválido' });
+    return;
+  }
+
+  try {
+    res.json(await updateCinema(cinemaId, req.body));
+  } catch (error) {
+    res.status(404).json({ message: error instanceof Error ? error.message : 'Cinema não encontrado' });
+  }
 }
 
 export async function postCinemaAdmin(

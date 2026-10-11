@@ -1,3 +1,4 @@
-import type { CreateMovieInput } from '../schemas/movie.schema.js';
+import type { CreateMovieInput, UpdateMovieInput } from '../schemas/movie.schema.js';
 
 export type CreateMovieDTO = CreateMovieInput;
+export type UpdateMovieDTO = UpdateMovieInput;

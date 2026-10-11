@@ -27,3 +27,5 @@ export const createCinemaSchema = z.object({
 });
 
 export type CreateCinemaInput = z.infer<typeof createCinemaSchema>;
+export const updateCinemaSchema = createCinemaSchema;
+export type UpdateCinemaInput = z.infer<typeof updateCinemaSchema>;

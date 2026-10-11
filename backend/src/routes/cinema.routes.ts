@@ -3,6 +3,7 @@ import { Router } from 'express';
 import {
   getCinemas,
   getManageableCinemas,
+  patchCinema,
   postCinemaAdmin,
   postCinema,
 } from '../controllers/cinema.controller.js';
@@ -11,7 +12,7 @@ import { authenticate } from '../middlewares/authenticate.js';
 import { authorize } from '../middlewares/authorize.js';
 import { validate } from '../middlewares/validate.js';
 import { assignCinemaAdminSchema } from '../schemas/cinema-admin.schema.js';
-import { createCinemaSchema } from '../schemas/cinema.schema.js';
+import { createCinemaSchema, updateCinemaSchema } from '../schemas/cinema.schema.js';
 
 export const cinemaRoutes = Router();
 
@@ -30,6 +31,14 @@ cinemaRoutes.post(
   authorize('PLATFORM_ADMIN'),
   validate(createCinemaSchema),
   postCinema,
+);
+
+cinemaRoutes.patch(
+  '/cinemas/:id',
+  authenticate,
+  authorize('PLATFORM_ADMIN'),
+  validate(updateCinemaSchema),
+  patchCinema,
 );
 
 cinemaRoutes.post(

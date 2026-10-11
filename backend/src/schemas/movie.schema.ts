@@ -39,3 +39,5 @@ export const createMovieSchema = z.object({
 });
 
 export type CreateMovieInput = z.infer<typeof createMovieSchema>;
+export const updateMovieSchema = createMovieSchema;
+export type UpdateMovieInput = z.infer<typeof updateMovieSchema>;

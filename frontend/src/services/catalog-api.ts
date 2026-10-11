@@ -280,15 +280,37 @@ export function createMovie(token: string, data: CreateMovieInput) {
   return postCatalogResource<ApiMovie>('/movies', data, token)
 }
 
+export async function updateMovie(token: string, movieId: number, data: CreateMovieInput) {
+  const response = await fetch(`${apiBaseUrl}/movies/${movieId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  })
+  const body = await response.json().catch(() => null) as { message?: string } | ApiMovie | null
+  if (!response.ok) throw new Error((body as { message?: string } | null)?.message ?? 'Não foi possível atualizar o filme.')
+  return body as ApiMovie
+}
+
 export function createCinema(token: string, data: CreateCinemaInput) {
   return postCatalogResource<ApiCinema>('/cinemas', data, token)
+}
+
+export async function updateCinema(token: string, cinemaId: number, data: CreateCinemaInput) {
+  const response = await fetch(`${apiBaseUrl}/cinemas/${cinemaId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  })
+  const body = await response.json().catch(() => null) as { message?: string } | ApiCinema | null
+  if (!response.ok) throw new Error((body as { message?: string } | null)?.message ?? 'Não foi possível atualizar o cinema.')
+  return body as ApiCinema
 }
 
 export function createRoom(token: string, data: { cinemaId: number; number: number; type: ApiRoom['type'] }) {
   return postCatalogResource<ApiRoom>('/rooms', data, token)
 }
 
-export function generateSeats(token: string, roomId: number, data: { rows: number; seatsPerRow: number; accessibleSeats: string[]; vipSeats: string[] }) {
+export function generateSeats(token: string, roomId: number, data: { rowSeats: number[]; accessibleSeats: string[]; vipSeats: string[] }) {
   return postCatalogResource<ApiSeat[]>(`/rooms/${roomId}/seats`, data, token)
 }
 
