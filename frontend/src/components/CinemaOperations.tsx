@@ -9,7 +9,7 @@ type OperationsTab = 'rooms' | 'sessions' | 'sales' | 'checkin'
 type SeatLayout = 'STANDARD' | 'MIXED'
 
 const defaultRoomForm = {
-  cinemaId: '', number: '', type: 'STANDARD' as ApiRoom['type'], layout: 'STANDARD' as SeatLayout, rows: '6', seatsPerRow: '8', accessibleSeats: 'A01, A02', vipSeats: '',
+  cinemaId: '', number: '', type: 'STANDARD' as ApiRoom['type'], layout: 'STANDARD' as SeatLayout, rowSeats: '8, 8, 8, 8, 8, 8', accessibleSeats: 'A01, A02', vipSeats: '',
 }
 
 const defaultSessionForm = { movieId: '', cinemaId: '', roomId: '', startsAt: '', price: '32.00', recurrenceDays: [] as number[], recurrenceUntil: '' }
@@ -18,6 +18,10 @@ const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
 function parseSeatCodes(value: string) {
   return value.split(',').map((seat) => seat.trim().toUpperCase()).filter(Boolean)
+}
+
+function parseRowSeats(value: string) {
+  return value.split(',').map((seatCount) => Number(seatCount.trim())).filter((seatCount) => Number.isFinite(seatCount))
 }
 
 function formatDuration(duration: number) {
@@ -94,8 +98,7 @@ export function CinemaOperations({ token }: CinemaOperationsProps) {
     try {
       const room = await createRoom(token, { cinemaId: Number(roomForm.cinemaId), number: Number(roomForm.number), type: roomForm.type })
       await generateSeats(token, room.id, {
-        rows: Number(roomForm.rows),
-        seatsPerRow: Number(roomForm.seatsPerRow),
+        rowSeats: parseRowSeats(roomForm.rowSeats),
         accessibleSeats: parseSeatCodes(roomForm.accessibleSeats),
         vipSeats: roomForm.layout === 'MIXED' ? parseSeatCodes(roomForm.vipSeats) : [],
       })
@@ -134,11 +137,11 @@ export function CinemaOperations({ token }: CinemaOperationsProps) {
         <div><p className="eyebrow">Estrutura</p><h3>Nova sala</h3></div>
         <label>Cinema<select required value={roomForm.cinemaId} onChange={(event) => setRoomForm({ ...roomForm, cinemaId: event.target.value })}><option value="">Selecione</option>{cinemas.map((cinema) => <option key={cinema.id} value={cinema.id}>{cinema.name}</option>)}</select></label>
         <div className="admin-form-grid"><label>Número<input required min="1" type="number" value={roomForm.number} onChange={(event) => setRoomForm({ ...roomForm, number: event.target.value })} /></label><label>Perfil da sala<select value={roomForm.type} onChange={(event) => setRoomForm({ ...roomForm, type: event.target.value as ApiRoom['type'] })}><option value="STANDARD">Tradicional</option><option value="VIP">VIP, todos os assentos</option></select></label></div>
-        <div className="admin-form-grid"><label>Fileiras<input required min="1" max="26" type="number" value={roomForm.rows} onChange={(event) => setRoomForm({ ...roomForm, rows: event.target.value })} /></label><label>Assentos/fileira<input required min="1" max="50" type="number" value={roomForm.seatsPerRow} onChange={(event) => setRoomForm({ ...roomForm, seatsPerRow: event.target.value })} /></label></div>
+        <label>Assentos por fileira<input required inputMode="numeric" pattern="\\d+(\\s*,\\s*\\d+){0,25}" placeholder="Ex.: 8, 10, 10, 8" value={roomForm.rowSeats} onChange={(event) => setRoomForm({ ...roomForm, rowSeats: event.target.value })} /></label>
         {roomForm.type === 'STANDARD' && <label>Mapa de assentos<select value={roomForm.layout} onChange={(event) => setRoomForm({ ...roomForm, layout: event.target.value as SeatLayout, vipSeats: event.target.value === 'MIXED' ? roomForm.vipSeats : '' })}><option value="STANDARD">Tradicional</option><option value="MIXED">Misto, com lugares VIP</option></select></label>}
         {roomForm.type === 'STANDARD' && roomForm.layout === 'MIXED' && <label>Assentos VIP (B01, B02)<input value={roomForm.vipSeats} onChange={(event) => setRoomForm({ ...roomForm, vipSeats: event.target.value })} /></label>}
         <label>Acessíveis (A01, A02)<input value={roomForm.accessibleSeats} onChange={(event) => setRoomForm({ ...roomForm, accessibleSeats: event.target.value })} /></label>
-        <p className="admin-form-hint">Em uma sala mista, informe os códigos dos lugares VIP. Assentos acessíveis são configurados separadamente.</p>
+        <p className="admin-form-hint">Informe uma quantidade para cada fileira, na ordem A, B, C... Ex.: 8, 10, 10, 8 cria uma planta irregular. Em uma sala mista, informe os códigos dos lugares VIP separadamente.</p>
         <button className="primary-action" disabled={isSubmitting} type="submit">{isSubmitting ? 'Configurando...' : 'Criar sala e assentos'}</button>
       </form>
       <section className="admin-list" aria-label="Salas cadastradas"><h3>Salas cadastradas</h3>{managedRooms.length ? managedRooms.map((room) => <article key={room.id}><strong>Sala {room.number} · {room.type === 'VIP' ? 'VIP' : 'Tradicional'}</strong><span>{cinemas.find((cinema) => cinema.id === room.cinemaId)?.name ?? `Cinema #${room.cinemaId}`}</span></article>) : <p className="empty-state">Nenhuma sala cadastrada.</p>}</section>

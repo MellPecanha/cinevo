@@ -46,12 +46,12 @@ export async function generateSeats(
     roomId: number;
   }[] = [];
 
-  for (let rowIndex = 0; rowIndex < data.rows; rowIndex++) {
+  for (let rowIndex = 0; rowIndex < data.rowSeats.length; rowIndex++) {
     const row = getRowLetter(rowIndex);
 
     for (
       let seatNumber = 1;
-      seatNumber <= data.seatsPerRow;
+      seatNumber <= data.rowSeats[rowIndex];
       seatNumber++
     ) {
       const seatCode = `${row}${String(seatNumber).padStart(2, '0')}`;
