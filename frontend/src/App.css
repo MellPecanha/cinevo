@@ -122,6 +122,12 @@
   color: oklch(98% 0.006 255);
   background: var(--mint);
 }
+.app-shell.light .session-day-picker button:hover,
+.app-shell.light .session-day-picker .selected-day {
+  border-color: oklch(38% 0.11 160);
+  color: oklch(98% 0.006 255);
+  background: var(--mint);
+}
 .app-shell.light .brand-mark,
 .app-shell.light .skip-link {
   color: oklch(98% 0.006 255);
@@ -788,6 +794,47 @@
 .session-picker h3 {
   margin: 0 0 13px;
   font-size: 1rem;
+}
+
+.session-day-picker {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(62px, 1fr));
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0 0 18px;
+  padding-bottom: 4px;
+}
+
+.session-day-picker button {
+  display: grid;
+  gap: 2px;
+  min-height: 56px;
+  padding: 8px 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  background: var(--surface);
+  font: inherit;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.session-day-picker button span {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.session-day-picker button strong {
+  color: inherit;
+  font-size: 0.8rem;
+}
+
+.session-day-picker button:hover,
+.session-day-picker .selected-day {
+  border-color: var(--mint);
+  color: oklch(15% 0.016 255);
+  background: var(--mint);
 }
 
 .cinema-session {
@@ -1696,6 +1743,12 @@
   gap: 11px;
 }
 
+.admin-form-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .admin-list {
   align-content: start;
   max-height: 520px;
@@ -1721,6 +1774,13 @@
   color: var(--muted);
   font-size: 0.79rem;
   line-height: 1.45;
+}
+
+.admin-edit-button {
+  justify-self: start;
+  margin-top: 5px;
+  padding: 7px 10px;
+  font-size: 0.78rem;
 }
 
 .admin-seat-maintenance {

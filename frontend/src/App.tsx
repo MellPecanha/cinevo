@@ -57,6 +57,41 @@ function ticketPrice(sessionPrice: string, type: TicketType) {
   return (type === "HALF" ? Math.ceil(cents / 2) : cents) / 100;
 }
 
+type SessionDay = {
+  key: string;
+  label: string;
+  date: string;
+};
+
+function localDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getSessionDays(): SessionDay[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const weekdayFormatter = new Intl.DateTimeFormat("pt-BR", {
+    weekday: "short",
+  });
+  const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+  });
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() + index);
+    return {
+      key: localDateKey(date),
+      label: index === 0 ? "Hoje" : weekdayFormatter.format(date).replace(".", ""),
+      date: dateFormatter.format(date),
+    };
+  });
+}
+
 function App() {
   const [query, setQuery] = useState("");
   const [theme, setTheme] = useState<"dark" | "light">(() =>
@@ -70,6 +105,9 @@ function App() {
   const [cinemas, setCinemas] = useState<ApiCinema[]>([]);
   const [selectedCity, setSelectedCity] = useState("São Paulo");
   const [selectedCinemaId, setSelectedCinemaId] = useState<number | null>(null);
+  const [selectedSessionDate, setSelectedSessionDate] = useState(() =>
+    localDateKey(new Date()),
+  );
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(
     null,
   );
@@ -341,6 +379,7 @@ function App() {
     () => cinemas.filter((cinema) => cinema.city === selectedCity),
     [cinemas, selectedCity],
   );
+  const sessionDays = useMemo(() => getSessionDays(), []);
   const selectedSessions = useMemo(
     () =>
       selectedMovie
@@ -348,18 +387,19 @@ function App() {
           session.movieId === selectedMovie.id && cinemas.find((cinema) =>
               cinema.id === session.room.cinemaId
             )?.city === selectedCity &&
+          localDateKey(new Date(session.startsAt)) === selectedSessionDate &&
           (!selectedCinemaId || session.room.cinemaId === selectedCinemaId)
         )
         : [],
-    [cinemas, selectedCity, selectedCinemaId, selectedMovie, sessions],
+    [cinemas, selectedCity, selectedCinemaId, selectedMovie, selectedSessionDate, sessions],
   );
-  const sessionsByCinema = useMemo(
+  const sessionsByRoom = useMemo(
     () =>
       selectedSessions.reduce<Record<number, ApiSession[]>>(
         (groups, session) => ({
           ...groups,
-          [session.room.cinemaId]: [
-            ...(groups[session.room.cinemaId] ?? []),
+          [session.room.id]: [
+            ...(groups[session.room.id] ?? []),
             session,
           ],
         }),
@@ -968,6 +1008,23 @@ function App() {
               aria-labelledby="sessions-title"
             >
               <h3 id="sessions-title">Sessões em {selectedCity}</h3>
+              <div className="session-day-picker" role="group" aria-label="Escolha a data da sessão">
+                {sessionDays.map((day) => (
+                  <button
+                    className={selectedSessionDate === day.key ? "selected-day" : ""}
+                    type="button"
+                    key={day.key}
+                    onClick={() => {
+                      setSelectedSessionDate(day.key);
+                      setSelectedSessionId(null);
+                    }}
+                    aria-pressed={selectedSessionDate === day.key}
+                  >
+                    <span>{day.label}</span>
+                    <strong>{day.date}</strong>
+                  </button>
+                ))}
+              </div>
               {cinemasInSelectedCity.length > 1 && (
                 <label className="cinema-filter">
                   Cinema<select
@@ -988,14 +1045,13 @@ function App() {
                   </select>
                 </label>
               )}
-              {Object.entries(sessionsByCinema).length > 0
-                ? Object.entries(sessionsByCinema).map(
-                  ([cinemaId, cinemaSessions]) => {
-                    const cinema = cinemas.find((item) =>
-                      item.id === Number(cinemaId)
-                    );
+              {Object.entries(sessionsByRoom).length > 0
+                ? Object.entries(sessionsByRoom).map(
+                  ([roomId, roomSessions]) => {
+                    const room = roomSessions[0].room;
+                    const cinema = cinemas.find((item) => item.id === room.cinemaId);
                     return (
-                      <div className="cinema-session" key={cinemaId}>
+                      <div className="cinema-session" key={roomId}>
                         <p>
                           <strong>{cinema?.name ?? "Cinema parceiro"}</strong>
                           <span>
@@ -1004,14 +1060,14 @@ function App() {
                               : "Endereço não informado"}
                           </span>
                           <span>
-                            Sala {cinemaSessions[0].room.number} ·{" "}
-                            {cinemaSessions[0].room.type === "VIP"
+                            Sala {room.number} ·{" "}
+                            {room.type === "VIP"
                               ? "VIP"
                               : "Tradicional"}
                           </span>
                         </p>
                         <div className="time-options">
-                          {cinemaSessions.map((session) => (
+                          {roomSessions.map((session) => (
                             <button
                               className={selectedSessionId === session.id
                                 ? "selected-time"
@@ -1038,8 +1094,8 @@ function App() {
                 )
                 : (
                   <p className="no-sessions">
-                    Ainda não há sessões publicadas para este filme nesse
-                    cinema. Escolha outro cinema ou cidade para continuar.
+                    Ainda não há sessões publicadas para este filme nesta data.
+                    Escolha outro dia, cinema ou cidade para continuar.
                   </p>
                 )}
             </section>
