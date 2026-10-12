@@ -2,6 +2,7 @@ import { db } from '../prisma/db.js';
 
 import type {
   CreateSessionDTO,
+  UpdateSessionDTO,
 } from '../dtos/session.dto.js';
 
 export async function listSessions() {
@@ -103,4 +104,44 @@ export async function createSession(
       price: data.price.toFixed(2),
     })));
   });
+}
+
+export async function updateSession(sessionId: number, data: UpdateSessionDTO) {
+  const session = await db.orm.public.Session.where({ id: sessionId }).first();
+
+  if (!session) throw new Error('Sessão não encontrada');
+
+  const [movie, room] = await Promise.all([
+    db.orm.public.Movie.where({ id: data.movieId }).first(),
+    db.orm.public.Room.where({ id: data.roomId }).first(),
+  ]);
+
+  if (!movie) throw new Error('Filme não encontrado');
+  if (!room) throw new Error('Sala não encontrada');
+
+  const startsAt = new Date(data.startsAt);
+  const endsAt = new Date(startsAt.getTime() + movie.duration * 60 * 1000);
+
+  await db.transaction(async (tx) => {
+    await tx.orm.public.Room.where({ id: room.id }).update({ isActive: room.isActive });
+
+    const sessionsInRoom = await tx.orm.public.Session.where({ roomId: room.id }).all();
+    const hasConflict = sessionsInRoom.some((item) =>
+      item.id !== sessionId && startsAt.toISOString() < item.endsAt && endsAt.toISOString() > item.startsAt,
+    );
+
+    if (hasConflict) throw new Error('A sala já possui uma sessão neste horário');
+
+    await tx.orm.public.Session.where({ id: sessionId }).update({
+      movieId: movie.id,
+      roomId: room.id,
+      startsAt: startsAt.toISOString(),
+      endsAt: endsAt.toISOString(),
+      price: data.price.toFixed(2),
+    });
+  });
+
+  const updated = await getSessionById(sessionId);
+  if (!updated) throw new Error('Sessão não encontrada');
+  return updated;
 }

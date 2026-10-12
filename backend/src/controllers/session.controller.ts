@@ -5,6 +5,7 @@ import {
   deactivateSession,
   getSessionById,
   listSessions,
+  updateSession,
 } from '../services/session.service.js';
 import { cancelSession } from '../services/session-cancellation.service.js';
 
@@ -53,4 +54,19 @@ export async function postSession(
   const sessions = await createSession(req.body);
 
   res.status(201).json({ sessions });
+}
+
+export async function patchSession(req: Request, res: Response) {
+  const sessionId = Number(req.params.id);
+
+  if (!Number.isSafeInteger(sessionId) || sessionId <= 0) {
+    res.status(400).json({ message: 'Sessão inválida' });
+    return;
+  }
+
+  try {
+    res.json(await updateSession(sessionId, req.body));
+  } catch (error) {
+    res.status(400).json({ message: error instanceof Error ? error.message : 'Não foi possível atualizar a sessão' });
+  }
 }

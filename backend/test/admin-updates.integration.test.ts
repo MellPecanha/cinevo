@@ -41,4 +41,24 @@ describe('edição administrativa', () => {
       title: 'Tentativa', duration: 95, classification: 'AGE_14',
     }).expect(403, { message: 'Usuário não possui permissão para esta operação' });
   });
+
+  it('permite que o administrador do cinema atualize uma sessão sem conflito', async () => {
+    const resource = createTestResources();
+    resources.push(resource);
+    const fixture = await createFixture(resource);
+    const administrator = await registerAndLogin(resource, 'Admin de sessões');
+    resource.cinemaAdminUserId = administrator.id;
+    await db.orm.public.User.where({ id: administrator.id }).update({ role: 'CINEMA_ADMIN' });
+    await db.orm.public.CinemaAdmin.create({ cinemaId: fixture.cinema.id, userId: administrator.id });
+    const login = await request(app).post('/auth/login').send({ email: administrator.email, password: 'Teste#123' }).expect(200);
+    const startsAt = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString();
+
+    await request(app).patch(`/sessions/${fixture.session.id}`).set('Authorization', `Bearer ${login.body.token as string}`).send({
+      movieId: fixture.movie.id, roomId: fixture.room.id, startsAt, price: 45.5,
+    }).expect(200).expect((response) => {
+      expect(response.body).toMatchObject({ movieId: fixture.movie.id, roomId: fixture.room.id, price: '45.50' });
+      expect(new Date(response.body.startsAt as string).getTime()).toBe(new Date(startsAt).getTime());
+      expect(new Date(response.body.endsAt as string).getTime() - new Date(startsAt).getTime()).toBe(120 * 60 * 1000);
+    });
+  });
 });

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 
 import { CinemaSales } from './CinemaSales'
 import { TicketCheckIn } from './TicketCheckIn'
-import { createRoom, createSession, fetchManageableCinemas, fetchMovies, fetchRoomSeats, fetchRooms, fetchSessions, generateSeats, updateSeatAvailability, type ApiCinema, type ApiMovie, type ApiRoom, type ApiRoomSeat, type ApiSession } from '../services/catalog-api'
+import { createRoom, createSession, fetchManageableCinemas, fetchMovies, fetchRoomSeats, fetchRooms, fetchSessions, generateSeats, updateSeatAvailability, updateSession, type ApiCinema, type ApiMovie, type ApiRoom, type ApiRoomSeat, type ApiSession } from '../services/catalog-api'
 
 type CinemaOperationsProps = { token: string }
 type OperationsTab = 'rooms' | 'sessions' | 'sales' | 'checkin'
@@ -28,6 +28,12 @@ function formatDuration(duration: number) {
   return `${Math.floor(duration / 60)}h ${String(duration % 60).padStart(2, '0')}min`
 }
 
+function toDateTimeLocal(value: string) {
+  const date = new Date(value)
+  const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
+  return offsetDate.toISOString().slice(0, 16)
+}
+
 export function CinemaOperations({ token }: CinemaOperationsProps) {
   const [tab, setTab] = useState<OperationsTab>('rooms')
   const [cinemas, setCinemas] = useState<ApiCinema[]>([])
@@ -38,6 +44,7 @@ export function CinemaOperations({ token }: CinemaOperationsProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [roomForm, setRoomForm] = useState(defaultRoomForm)
   const [sessionForm, setSessionForm] = useState(defaultSessionForm)
+  const [editingSessionId, setEditingSessionId] = useState<number | null>(null)
   const [maintenanceRoomId, setMaintenanceRoomId] = useState('')
   const [maintenanceSeats, setMaintenanceSeats] = useState<ApiRoomSeat[]>([])
   const [maintenanceSeatId, setMaintenanceSeatId] = useState<number | null>(null)
@@ -118,15 +125,34 @@ export function CinemaOperations({ token }: CinemaOperationsProps) {
     setFeedback('')
 
     try {
-      const result = await createSession(token, { movieId: Number(sessionForm.movieId), roomId: Number(sessionForm.roomId), startsAt: new Date(sessionForm.startsAt).toISOString(), price: Number(sessionForm.price), ...(sessionForm.recurrenceDays.length ? { recurrenceDays: sessionForm.recurrenceDays, recurrenceUntil: new Date(sessionForm.recurrenceUntil).toISOString() } : {}) })
+      const data = { movieId: Number(sessionForm.movieId), roomId: Number(sessionForm.roomId), startsAt: new Date(sessionForm.startsAt).toISOString(), price: Number(sessionForm.price) }
+      if (editingSessionId) {
+        const updated = await updateSession(token, editingSessionId, data)
+        setSessions((current) => current.map((session) => session.id === updated.id ? updated : session))
+        setFeedback('Sessão atualizada. O término foi recalculado pela duração do filme.')
+      } else {
+        const result = await createSession(token, { ...data, ...(sessionForm.recurrenceDays.length ? { recurrenceDays: sessionForm.recurrenceDays, recurrenceUntil: new Date(sessionForm.recurrenceUntil).toISOString() } : {}) })
+        setFeedback(`${result.sessions.length} sessão(ões) publicada(s). O término foi calculado pela duração do filme.`)
+      }
       setSessionForm(defaultSessionForm)
-      setFeedback(`${result.sessions.length} sessão(ões) publicada(s). O término foi calculado pela duração do filme.`)
+      setEditingSessionId(null)
       await loadData()
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : 'Não foi possível publicar a sessão.')
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const startEditingSession = (session: ApiSession) => {
+    setEditingSessionId(session.id)
+    setSessionForm({ movieId: String(session.movieId), cinemaId: String(session.room.cinemaId), roomId: String(session.roomId), startsAt: toDateTimeLocal(session.startsAt), price: session.price, recurrenceDays: [], recurrenceUntil: '' })
+    setFeedback('')
+  }
+
+  const cancelSessionEditing = () => {
+    setEditingSessionId(null)
+    setSessionForm(defaultSessionForm)
   }
 
   return <section>
@@ -156,18 +182,18 @@ export function CinemaOperations({ token }: CinemaOperationsProps) {
 
     {tab === 'sessions' && <div className="admin-workspace">
       <form className="admin-form" onSubmit={(event) => void submitSession(event)}>
-        <div><p className="eyebrow">Programação</p><h3>Nova sessão</h3></div>
+        <div><p className="eyebrow">Programação</p><h3>{editingSessionId ? 'Editar sessão' : 'Nova sessão'}</h3></div>
         <label>Filme<select required value={sessionForm.movieId} onChange={(event) => setSessionForm({ ...sessionForm, movieId: event.target.value })}><option value="">Selecione</option>{movies.map((movie) => <option key={movie.id} value={movie.id}>{movie.title}</option>)}</select></label>
         <label>Cinema<select required value={sessionForm.cinemaId} onChange={(event) => setSessionForm({ ...sessionForm, cinemaId: event.target.value, roomId: '' })}><option value="">Selecione</option>{cinemas.map((cinema) => <option key={cinema.id} value={cinema.id}>{cinema.name} · {cinema.city}</option>)}</select></label>
         <label>Sala<select required disabled={!sessionForm.cinemaId} value={sessionForm.roomId} onChange={(event) => setSessionForm({ ...sessionForm, roomId: event.target.value })}><option value="">{sessionForm.cinemaId ? 'Selecione' : 'Escolha um cinema primeiro'}</option>{roomsForSelectedCinema.map((room) => <option key={room.id} value={room.id}>Sala {room.number} · {room.type === 'VIP' ? 'VIP' : 'Tradicional'}</option>)}</select></label>
         <label>Início<input required type="datetime-local" value={sessionForm.startsAt} onChange={(event) => setSessionForm({ ...sessionForm, startsAt: event.target.value })} /></label>
         <p className="admin-form-hint">{selectedMovie ? `Término automático: ${formatDuration(selectedMovie.duration)} após o início.` : 'O término será calculado automaticamente pela duração do filme.'}</p>
-        <fieldset className="admin-weekdays"><legend>Repetir nos dias da semana</legend><div>{weekDays.map((day, index) => <label key={day}><input type="checkbox" checked={sessionForm.recurrenceDays.includes(index)} onChange={() => setSessionForm({ ...sessionForm, recurrenceDays: sessionForm.recurrenceDays.includes(index) ? sessionForm.recurrenceDays.filter((value) => value !== index) : [...sessionForm.recurrenceDays, index] })} /> {day}</label>)}</div></fieldset>
-        {sessionForm.recurrenceDays.length > 0 && <label>Repetir até<input required type="datetime-local" value={sessionForm.recurrenceUntil} onChange={(event) => setSessionForm({ ...sessionForm, recurrenceUntil: event.target.value })} /></label>}
+        {!editingSessionId && <fieldset className="admin-weekdays"><legend>Repetir nos dias da semana</legend><div>{weekDays.map((day, index) => <label key={day}><input type="checkbox" checked={sessionForm.recurrenceDays.includes(index)} onChange={() => setSessionForm({ ...sessionForm, recurrenceDays: sessionForm.recurrenceDays.includes(index) ? sessionForm.recurrenceDays.filter((value) => value !== index) : [...sessionForm.recurrenceDays, index] })} /> {day}</label>)}</div></fieldset>}
+        {!editingSessionId && sessionForm.recurrenceDays.length > 0 && <label>Repetir até<input required type="datetime-local" value={sessionForm.recurrenceUntil} onChange={(event) => setSessionForm({ ...sessionForm, recurrenceUntil: event.target.value })} /></label>}
         <label>Preço (R$)<input required min="0.01" step="0.01" type="number" value={sessionForm.price} onChange={(event) => setSessionForm({ ...sessionForm, price: event.target.value })} /></label>
-        <button className="primary-action" disabled={isSubmitting} type="submit">{isSubmitting ? 'Publicando...' : 'Publicar sessão'}</button>
+        <div className="admin-form-actions"><button className="primary-action" disabled={isSubmitting} type="submit">{isSubmitting ? 'Salvando...' : editingSessionId ? 'Salvar alterações' : 'Publicar sessão'}</button>{editingSessionId && <button className="quiet-action" type="button" onClick={cancelSessionEditing}>Cancelar</button>}</div>
       </form>
-      <section className="admin-list" aria-label="Sessões publicadas"><h3>Sessões publicadas</h3>{managedSessions.length ? managedSessions.map((session) => <article key={session.id}><strong>{session.movie?.title ?? `Filme #${session.movieId}`}</strong><span>{new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(session.startsAt))} até {new Intl.DateTimeFormat('pt-BR', { timeStyle: 'short' }).format(new Date(session.endsAt))} · Sala {session.room.number} · R$ {session.price}</span></article>) : <p className="empty-state">Nenhuma sessão publicada.</p>}</section>
+      <section className="admin-list" aria-label="Sessões publicadas"><h3>Sessões publicadas</h3>{managedSessions.length ? managedSessions.map((session) => <article key={session.id}><strong>{session.movie?.title ?? `Filme #${session.movieId}`}</strong><span>{new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(session.startsAt))} até {new Intl.DateTimeFormat('pt-BR', { timeStyle: 'short' }).format(new Date(session.endsAt))} · Sala {session.room.number} · R$ {session.price}</span><button className="quiet-action admin-edit-button" type="button" onClick={() => startEditingSession(session)}>Editar</button></article>) : <p className="empty-state">Nenhuma sessão publicada.</p>}</section>
     </div>}
 
     {tab === 'sales' && <CinemaSales token={token} />}

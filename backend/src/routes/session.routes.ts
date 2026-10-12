@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import {
   getSession,
+  patchSession,
   patchDeactivateSession,
   patchCancelSession,
   getSessions,
@@ -15,6 +16,7 @@ import { authorizeCinemaFromSessionParam } from '../middlewares/cinema-access.js
 
 import {
   createSessionSchema,
+  updateSessionSchema,
 } from '../schemas/session.schema.js';
 
 export const sessionRoutes = Router();
@@ -35,6 +37,15 @@ sessionRoutes.post(
   validate(createSessionSchema),
   authorizeCinemaFromSessionBody,
   postSession,
+);
+
+sessionRoutes.patch(
+  '/sessions/:id',
+  authenticate,
+  validate(updateSessionSchema),
+  authorizeCinemaFromSessionParam,
+  authorizeCinemaFromSessionBody,
+  patchSession,
 );
 
 sessionRoutes.patch('/sessions/:id/deactivate', authenticate, authorizeCinemaFromSessionParam, patchDeactivateSession);

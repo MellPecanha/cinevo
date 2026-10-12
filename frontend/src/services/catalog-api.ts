@@ -329,6 +329,17 @@ export function createSession(token: string, data: { movieId: number; roomId: nu
   return postCatalogResource<{ sessions: ApiSession[] }>('/sessions', data, token)
 }
 
+export async function updateSession(token: string, sessionId: number, data: { movieId: number; roomId: number; startsAt: string; price: number }) {
+  const response = await fetch(`${apiBaseUrl}/sessions/${sessionId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  })
+  const body = await response.json().catch(() => null) as { message?: string } | ApiSession | null
+  if (!response.ok) throw new Error((body as { message?: string } | null)?.message ?? 'Não foi possível atualizar a sessão.')
+  return body as ApiSession
+}
+
 export function fetchUsers(token: string) {
   return fetchAuthenticatedResource<AdminUser[]>('/users', token)
 }
