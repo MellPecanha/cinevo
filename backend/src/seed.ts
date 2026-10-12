@@ -340,11 +340,11 @@ async function seed() {
   const seedMovies = await Promise.all(movies.map(ensureMovie));
   const rooms = [standardRoom, vipRoom, pinheirosRoom, moemaRoom, copacabanaRoom, botafogoRoom, savassiRoom, batelRoom, boaViagemRoom];
   const prices = ['32.00', '46.00', '29.00', '34.00'];
-  const sessionPlans = Array.from({ length: 7 }, (_, day) => [0, 1, 2, 3].map((movieIndex) => ({
+  const sessionPlans = Array.from({ length: 14 }, (_, day) => [0, 1, 2, 3].map((movieIndex) => ({
     movieIndex,
     room: rooms[(day * 4 + movieIndex) % rooms.length],
     price: prices[movieIndex],
-    // A primeira programação começa nas próximas horas e continua por sete dias.
+    // A primeira programação começa nas próximas horas e continua por duas semanas.
     times: futureSession(3 + day * 24 + movieIndex * 3, seedMovies[movieIndex].duration),
   }))).flat();
 
@@ -388,7 +388,7 @@ async function seed() {
   console.log('Cliente adicional: marina@cinevo.local / Cinevo#123');
   console.log('Admin da plataforma: admin@cinevo.local / Cinevo#123');
   console.log('Admin do cinema: gerente@cinevo.local / Cinevo#123');
-  console.log(`Recursos: 8 cinemas em 5 cidades, 9 salas, ${seedMovies.length} filmes, ${seededSessions.length} sessões e 2 ingressos pagos.`);
+  console.log(`Recursos: 8 cinemas em 5 cidades, 9 salas, ${seedMovies.length} filmes, ${seededSessions.length} sessões para as próximas duas semanas e 2 ingressos pagos.`);
   console.log(`Usuário de demonstração criado: ${customer.email}; admin: ${platformAdmin.email}.`);
 }
 
