@@ -4,7 +4,9 @@ import { db } from '../prisma/db.js';
 
 import type {
   CreateUserDTO,
+  UpdateProfileDTO,
 } from '../dtos/user.dto.js';
+import { AppError, ConflictError } from '../errors/app-error.js';
 
 type UserRole = 'CUSTOMER' | 'CINEMA_ADMIN' | 'PLATFORM_ADMIN';
 
@@ -63,4 +65,31 @@ export async function createUser(
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
+}
+
+export async function updateProfile(userId: number, data: UpdateProfileDTO) {
+  const user = await db.orm.public.User.where({ id: userId }).first();
+  if (!user) throw new AppError('Usuário não encontrado', 404);
+
+  if (data.email !== user.email) {
+    const userWithEmail = await db.orm.public.User.where({ email: data.email }).first();
+    if (userWithEmail) throw new ConflictError('Já existe um usuário com este e-mail');
+  }
+
+  let passwordHash = user.passwordHash;
+  if (data.password) {
+    const matches = await bcrypt.compare(data.currentPassword!, user.passwordHash);
+    if (!matches) throw new AppError('Senha atual inválida', 401);
+    passwordHash = await bcrypt.hash(data.password, 12);
+  }
+
+  const updated = await db.orm.public.User.where({ id: userId }).update({
+    name: data.name,
+    email: data.email,
+    phone: data.phone,
+    passwordHash,
+  });
+
+  if (!updated) throw new AppError('Não foi possível atualizar o perfil', 500);
+  return safeUser(updated);
 }

@@ -28,6 +28,44 @@ export const createUserSchema = z.object({
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 
+export const updateProfileSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, 'Nome deve possuir pelo menos 2 caracteres')
+    .max(150, 'Nome deve possuir no máximo 150 caracteres'),
+
+  email: z
+    .string()
+    .trim()
+    .email('E-mail inválido')
+    .transform((email) => email.toLowerCase()),
+
+  phone: z
+    .string()
+    .trim()
+    .max(20, 'Telefone inválido')
+    .transform((phone) => phone || null)
+    .refine((phone) => phone === null || phone.length >= 10, 'Telefone inválido'),
+
+  currentPassword: z.string().optional(),
+  password: z
+    .string()
+    .min(8, 'A senha deve possuir pelo menos 8 caracteres')
+    .max(100, 'A senha deve possuir no máximo 100 caracteres')
+    .optional(),
+}).superRefine((data, context) => {
+  if (data.password && !data.currentPassword) {
+    context.addIssue({
+      code: 'custom',
+      path: ['currentPassword'],
+      message: 'Informe sua senha atual para definir uma nova senha',
+    });
+  }
+});
+
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+
 export const updateUserRoleSchema = z.object({
   role: z.enum(['CUSTOMER', 'CINEMA_ADMIN', 'PLATFORM_ADMIN']),
 });
