@@ -22,4 +22,31 @@ describe('autenticação', () => {
       expect(response.body.passwordHash).toBeUndefined();
     });
   });
+
+  it('permite ao usuário editar o próprio perfil e trocar a senha com confirmação', async () => {
+    const resource = createTestResources();
+    resources.push(resource);
+    const customer = await registerAndLogin(resource, 'Perfil original');
+
+    await request(app).patch('/users/me').set('Authorization', customer.authorization).send({
+      name: 'Perfil atualizado', email: 'perfil.atualizado@cinevo.test', phone: '11988887777',
+      currentPassword: 'Teste#123', password: 'NovaSenha#123',
+    }).expect(200).expect((response) => {
+      expect(response.body).toMatchObject({ name: 'Perfil atualizado', email: 'perfil.atualizado@cinevo.test', phone: '11988887777' });
+      expect(response.body.passwordHash).toBeUndefined();
+    });
+
+    await request(app).post('/auth/login').send({ email: 'perfil.atualizado@cinevo.test', password: 'NovaSenha#123' }).expect(200);
+  });
+
+  it('recusa troca de senha com a senha atual incorreta', async () => {
+    const resource = createTestResources();
+    resources.push(resource);
+    const customer = await registerAndLogin(resource, 'Senha protegida');
+
+    await request(app).patch('/users/me').set('Authorization', customer.authorization).send({
+      name: 'Senha protegida', email: customer.email, phone: '11999999999',
+      currentPassword: 'Incorreta#123', password: 'NovaSenha#123',
+    }).expect(401, { message: 'Senha atual inválida' });
+  });
 });

@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import {
   createUser,
   listUsers,
+  updateProfile,
   updateUserRole,
 } from '../services/user.service.js';
 
@@ -33,4 +34,9 @@ export async function patchUserRole(req: Request, res: Response) {
   } catch (error) {
     res.status(400).json({ message: error instanceof Error ? error.message : 'Não foi possível atualizar o usuário' });
   }
+}
+
+export async function patchProfile(req: Request, res: Response) {
+  if (!req.user) return void res.status(401).json({ message: 'Usuário não autenticado' });
+  res.json(await updateProfile(req.user.sub, req.body));
 }
