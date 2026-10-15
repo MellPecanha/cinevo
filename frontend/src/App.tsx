@@ -34,6 +34,7 @@ import {
   registerCustomer,
   removeFavorite,
   type TicketType,
+  updateCurrentUser,
 } from "./services/catalog-api";
 import "./App.css";
 
@@ -143,7 +144,18 @@ function App() {
   const [copiedTicketCode, setCopiedTicketCode] = useState<string | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
-  const [profileMessage, setProfileMessage] = useState("");
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [isProfileEditing, setIsProfileEditing] = useState(false);
+  const [isProfileSaving, setIsProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [profileSuccess, setProfileSuccess] = useState("");
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    currentPassword: "",
+    password: "",
+  });
   const [orderToCancel, setOrderToCancel] = useState<number | null>(null);
   const [ticketTab, setTicketTab] = useState<"upcoming" | "history">(
     "upcoming",
@@ -608,16 +620,48 @@ function App() {
       return;
     }
     setIsProfileOpen(true);
-    setProfileMessage("Carregando perfil...");
+    setIsProfileLoading(true);
+    setProfileError("");
+    setProfileSuccess("");
     try {
-      setCurrentUser(await fetchCurrentUser(authToken));
-      setProfileMessage("");
+      const user = await fetchCurrentUser(authToken);
+      setCurrentUser(user);
+      setProfileForm({ name: user.name, email: user.email, phone: user.phone ?? "", currentPassword: "", password: "" });
     } catch (error) {
-      setProfileMessage(
+      setProfileError(
         error instanceof Error
           ? error.message
           : "Não foi possível carregar seu perfil.",
       );
+    } finally {
+      setIsProfileLoading(false);
+    }
+  };
+  const cancelProfileEditing = () => {
+    if (currentUser) {
+      setProfileForm({ name: currentUser.name, email: currentUser.email, phone: currentUser.phone ?? "", currentPassword: "", password: "" });
+    }
+    setProfileError("");
+    setProfileSuccess("");
+    setIsProfileEditing(false);
+  };
+  const submitProfile = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!authToken) return;
+    setIsProfileSaving(true);
+    setProfileError("");
+    setProfileSuccess("");
+    try {
+      const user = await updateCurrentUser(authToken, profileForm);
+      setCurrentUser(user);
+      setProfileForm({ name: user.name, email: user.email, phone: user.phone ?? "", currentPassword: "", password: "" });
+      setProfileSuccess("Perfil atualizado com sucesso.");
+      setIsProfileEditing(false);
+      setNotice("Seus dados de perfil foram atualizados.");
+    } catch (error) {
+      setProfileError(error instanceof Error ? error.message : "Não foi possível atualizar seu perfil.");
+    } finally {
+      setIsProfileSaving(false);
     }
   };
   const openAccount = () => {
@@ -1677,8 +1721,10 @@ function App() {
                 ×
               </button>
             </header>
-            {profileMessage
-              ? <p className="empty-state">{profileMessage}</p>
+            {isProfileLoading
+              ? <p className="empty-state">Carregando perfil...</p>
+              : profileError && !currentUser
+              ? <p className="empty-state">{profileError}</p>
               : currentUser && (
                 <>
                   <div className="profile-identity">
@@ -1692,23 +1738,30 @@ function App() {
                       </p>
                     </div>
                   </div>
-                  <dl className="profile-details">
-                    <div>
-                      <dt>E-mail</dt>
-                      <dd>{currentUser.email}</dd>
-                    </div>
-                    <div>
-                      <dt>Telefone</dt>
-                      <dd>{currentUser.phone ?? "Não informado"}</dd>
-                    </div>
-                    <div>
-                      <dt>Cliente desde</dt>
-                      <dd>
-                        {new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" })
-                          .format(new Date(currentUser.createdAt))}
-                      </dd>
-                    </div>
-                  </dl>
+                  {isProfileEditing ? (
+                    <form className="profile-form" onSubmit={(event) => void submitProfile(event)}>
+                      <label>Nome<input required minLength={2} value={profileForm.name} onChange={(event) => setProfileForm({ ...profileForm, name: event.target.value })} autoComplete="name" /></label>
+                      <label>E-mail<input required type="email" value={profileForm.email} onChange={(event) => setProfileForm({ ...profileForm, email: event.target.value })} autoComplete="email" /></label>
+                      <label>Telefone<input type="tel" inputMode="tel" maxLength={20} pattern="[0-9()\\s+-]{10,20}" placeholder="(11) 99999-9999" value={profileForm.phone} onChange={(event) => setProfileForm({ ...profileForm, phone: event.target.value })} autoComplete="tel" /></label>
+                      <fieldset className="password-fields">
+                        <legend>Alterar senha <span>(opcional)</span></legend>
+                        <label>Senha atual<input type="password" value={profileForm.currentPassword} onChange={(event) => setProfileForm({ ...profileForm, currentPassword: event.target.value })} autoComplete="current-password" /></label>
+                        <label>Nova senha<input type="password" minLength={8} value={profileForm.password} onChange={(event) => setProfileForm({ ...profileForm, password: event.target.value })} autoComplete="new-password" /></label>
+                      </fieldset>
+                      {profileError && <p className="profile-feedback error" role="alert">{profileError}</p>}
+                      <div className="profile-actions"><button className="quiet-action" type="button" onClick={cancelProfileEditing}>Cancelar</button><button className="primary-action" type="submit" disabled={isProfileSaving}>{isProfileSaving ? "Salvando..." : "Salvar alterações"}</button></div>
+                    </form>
+                  ) : (
+                    <>
+                      <dl className="profile-details">
+                        <div><dt>E-mail</dt><dd>{currentUser.email}</dd></div>
+                        <div><dt>Telefone</dt><dd>{currentUser.phone ?? "Não informado"}</dd></div>
+                        <div><dt>Cliente desde</dt><dd>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date(currentUser.createdAt))}</dd></div>
+                      </dl>
+                      {profileSuccess && <p className="profile-feedback success" role="status">{profileSuccess}</p>}
+                      <button className="edit-profile" type="button" onClick={() => { setProfileError(""); setProfileSuccess(""); setIsProfileEditing(true); }}>Editar perfil</button>
+                    </>
+                  )}
                   {currentUser.role !== "CUSTOMER" && (
                     <button
                       className="admin-link"

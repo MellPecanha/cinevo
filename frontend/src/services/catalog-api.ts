@@ -248,6 +248,23 @@ export function fetchCurrentUser(token: string) {
   return fetchAuthenticatedResource<AuthUser>('/auth/me', token)
 }
 
+export async function updateCurrentUser(token: string, data: {
+  name: string
+  email: string
+  phone: string
+  currentPassword?: string
+  password?: string
+}) {
+  const response = await fetch(`${apiBaseUrl}/users/me`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  })
+  const body = await response.json().catch(() => null) as { message?: string } | AuthUser | null
+  if (!response.ok) throw new Error((body as { message?: string } | null)?.message ?? 'Não foi possível atualizar seu perfil.')
+  return body as AuthUser
+}
+
 export function cancelOrder(token: string, orderId: number) {
   return postCatalogResource<{ id: number; status: 'CANCELLED' }>(`/orders/${orderId}/cancel`, {}, token)
 }
